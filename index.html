@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Board da Sprint</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  :root{
+    --bg:#f6f6f4; --card:#ffffff; --line:#e6e6e2; --txt:#1d1d1f; --mut:#8a8a90; --mut2:#b3b3b8;
+    --grn:#16a34a; --grnbg:#eef9f1; --blu:#2563eb; --amb:#d97706; --red:#dc2626; --band:#eeeeea;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--txt);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;
+    font-size:14px;padding:26px;max-width:1320px;margin:0 auto}
+  .kicker{font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--mut)}
+  h1{font-family:Georgia,"Times New Roman",serif;font-size:32px;margin:4px 0 16px;font-weight:600}
+
+  .tabs{display:flex;gap:6px;margin-bottom:18px}
+  .tab{padding:9px 20px;border-radius:10px;border:1px solid var(--line);background:var(--card);
+    color:var(--mut);cursor:pointer;font-size:14px;font-weight:500}
+  .tab.on{background:var(--txt);color:#fff;border-color:var(--txt)}
+
+  .bar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:14px}
+  .summary{display:flex;gap:7px;flex-wrap:wrap}
+  .pill{font-size:11px;padding:4px 11px;border-radius:20px;border:1px solid var(--line);background:var(--card);
+    color:var(--mut);font-variant-numeric:tabular-nums;display:inline-flex;align-items:center;gap:6px}
+  .dot{width:7px;height:7px;border-radius:50%;display:inline-block}
+  .spacer{flex:1}
+  .ctrl{background:var(--card);border:1px solid var(--line);color:var(--txt);border-radius:9px;padding:8px 11px;font-size:13px}
+  .ctrl:focus{outline:none;border-color:var(--grn)}
+  .toggle{cursor:pointer;font-size:12px;color:var(--mut);display:inline-flex;align-items:center;gap:6px}
+
+  table{width:100%;border-collapse:separate;border-spacing:0 6px}
+  th{text-align:left;font-size:10px;letter-spacing:.09em;text-transform:uppercase;color:var(--mut2);padding:0 12px 2px;font-weight:600}
+  td{background:var(--card);padding:12px;border-top:1px solid var(--line);border-bottom:1px solid var(--line);vertical-align:top}
+
+  /* loja header band */
+  tr.lojahead td{background:var(--band);border:1px solid var(--line);border-radius:12px;padding:10px 12px}
+  .lojahead-in{display:flex;align-items:center;gap:10px}
+  .handle{cursor:grab;color:var(--mut2);font-size:17px;line-height:1;user-select:none}
+  .handle:active{cursor:grabbing}
+  .lname{font-family:Georgia,serif;font-size:21px;background:none;border:none;color:var(--txt);padding:2px 0;min-width:160px}
+  .lname:focus{outline:none;border-bottom:1px solid var(--mut2)}
+  .add-act{background:none;border:1px dashed var(--mut2);color:var(--mut);border-radius:8px;font-size:12px;padding:5px 10px;cursor:pointer}
+  .add-act:hover{border-color:var(--grn);color:var(--grn)}
+  tr.lojahead.drag-over td{border-top:3px solid var(--grn)}
+  tr.lojahead.done td{opacity:.5}
+  tr.lojahead.done .lname{text-decoration:line-through;color:var(--mut)}
+
+  /* activity rows */
+  tr.act td:first-child{border-left:3px solid transparent;border-radius:10px 0 0 10px;padding-left:14px}
+  tr.act td:last-child{border-right:1px solid var(--line);border-radius:0 10px 10px 0}
+  tr.act.active td:first-child{border-left-color:var(--grn)}
+  tr.act.active td{background:var(--grnbg)}
+  tr.act.done td{background:#fafafa;opacity:.6}
+  tr.act.done .aname{text-decoration:line-through;color:var(--mut)}
+
+  .chk{width:20px;height:20px;border:1.5px solid var(--line);border-radius:6px;background:var(--card);cursor:pointer;
+    display:flex;align-items:center;justify-content:center;color:#fff;font-size:13px;margin-top:1px}
+  .chk.on{background:var(--grn);border-color:var(--grn)}
+  .aname{font-size:15px;background:none;border:none;color:var(--txt);width:100%;padding:3px 0;font-weight:500}
+  .aname:focus{outline:none;border-bottom:1px solid var(--line)}
+  .stale{font-size:10px;color:var(--amb);margin-top:4px;letter-spacing:.03em}
+
+  .chip{font-size:11px;letter-spacing:.03em;padding:5px 9px;border-radius:7px;border:1.5px solid var(--line);
+    background:var(--card);color:var(--txt);cursor:pointer;appearance:none;font-weight:500}
+  .chip:focus{outline:none}
+
+  .resps{display:flex;flex-wrap:wrap;gap:5px;align-items:center;min-width:120px}
+  .rchip{font-size:12px;background:#f0f0ee;border:1px solid var(--line);border-radius:14px;padding:3px 6px 3px 10px;display:inline-flex;align-items:center;gap:4px}
+  .rchip i{cursor:pointer;color:var(--mut2);font-style:normal;font-size:14px}
+  .rchip i:hover{color:var(--red)}
+  .addresp{border:1px dashed var(--line);background:none;color:var(--mut);border-radius:14px;font-size:12px;padding:3px 8px;cursor:pointer}
+
+  .log{min-width:340px;width:38%}
+  .entry{padding:9px 11px;background:#fafafa;border:1px solid var(--line);border-radius:9px;margin-bottom:7px}
+  .entry.latest{background:#fff;border-color:#dcdcd6}
+  .entry-head{font-size:10px;letter-spacing:.05em;text-transform:uppercase;color:var(--mut);margin-bottom:5px;display:flex;justify-content:space-between;align-items:center}
+  .entry-head i{cursor:pointer;color:var(--mut2);font-style:normal;font-size:14px}
+  .entry-head i:hover{color:var(--red)}
+  .entry-body{font-size:13px;line-height:1.6;white-space:pre-wrap}
+  .empty{color:var(--mut2);font-size:12px;font-style:italic}
+  .hist-toggle{font-size:11px;color:var(--mut);cursor:pointer;margin:2px 0 6px;display:inline-block}
+  .hist-toggle:hover{color:var(--grn)}
+  .addlog{font-size:12px;color:var(--grn);cursor:pointer;margin-top:4px;display:inline-block;font-weight:500}
+
+  .composer{margin-top:8px;background:#fff;border:1px solid var(--line);border-radius:10px;padding:11px}
+  .hint{font-size:11px;color:var(--mut);margin-bottom:8px;line-height:1.5}
+  .hint b{color:var(--txt)}
+  .composer textarea{width:100%;border:1px solid var(--line);border-radius:8px;padding:9px;font-size:13px;font-family:inherit;resize:vertical;line-height:1.55}
+  .composer textarea:focus{outline:none;border-color:var(--grn)}
+  .row2{display:flex;gap:7px;align-items:center;margin-top:8px}
+  .btn{background:var(--card);border:1px solid var(--line);color:var(--mut);border-radius:9px;padding:8px 14px;font-size:13px;cursor:pointer}
+  .btn:hover{border-color:var(--grn);color:var(--grn)}
+  .btn.primary{background:var(--grn);border-color:var(--grn);color:#fff}
+  .suggest{margin-top:8px;font-size:12px;color:#92600a;background:#fdf6e9;border:1px solid #f0dcae;border-radius:8px;padding:7px 9px}
+  .suggest a{color:var(--grn);cursor:pointer;margin-left:7px;font-weight:600}
+  .del{background:none;border:none;color:var(--mut2);cursor:pointer;font-size:16px;padding:2px}
+  .del:hover{color:var(--red)}
+  .dellja{color:var(--mut2);cursor:pointer;font-size:17px}
+  .dellja:hover{color:var(--red)}
+  .addrow td{background:none;border:1px dashed var(--line)!important;border-radius:12px;text-align:center;padding:11px}
+  .addrow button{background:none;border:none;color:var(--mut);cursor:pointer;font-size:13px;font-weight:500}
+  .addrow button:hover{color:var(--grn)}
+  .foot{margin-top:22px;font-size:11px;color:var(--mut);line-height:1.7}
+  .foot b{color:var(--txt)}
+  #gate{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:1000}
+  .gatebox{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:32px;width:330px;text-align:center;box-shadow:0 8px 30px rgba(0,0,0,.06)}
+  .gtitle{font-family:Georgia,serif;font-size:25px;margin-bottom:4px}
+  .gsub{font-size:12px;color:var(--mut);margin-bottom:20px}
+  .gatebox input{width:100%;padding:11px;border:1px solid var(--line);border-radius:9px;font-size:14px;margin-bottom:10px;font-family:inherit}
+  .gatebox input:focus{outline:none;border-color:var(--grn)}
+  .gatebox button{width:100%;padding:11px;background:var(--grn);color:#fff;border:none;border-radius:9px;font-size:14px;cursor:pointer;font-weight:500}
+  .gerr{color:var(--red);font-size:12px;margin-top:10px;display:none}
+</style>
+</head>
+<body>
+  <div id="gate">
+    <div class="gatebox">
+      <div class="gtitle">Board de Sprint</div>
+      <div class="gsub">Squad Compra Rápida · acesso restrito</div>
+      <input id="gatePass" type="password" placeholder="senha" autofocus>
+      <button onclick="tryGate()">Entrar</button>
+      <div id="gateErr" class="gerr">senha incorreta</div>
+    </div>
+  </div>
+  <div class="kicker">compra rápida · board de sprint</div>
+  <h1 id="title">Board da Sprint</h1>
+
+  <div class="tabs">
+    <div class="tab" id="tab-sarue" onclick="switchBoard('sarue')">Sarue</div>
+    <div class="tab" id="tab-guardiao" onclick="switchBoard('guardiao')">Guardião</div>
+  </div>
+
+  <div class="bar">
+    <div class="summary" id="summary"></div>
+    <div class="spacer"></div>
+    <select class="ctrl" id="fPerson" onchange="setFilter()"></select>
+    <label class="toggle"><input type="checkbox" id="fHide" onchange="setFilter()"> esconder concluídas</label>
+    <span class="pill" style="margin-left:4px"><span class="dot" id="syncDotC" style="background:#8a8a90"></span><span id="syncDotT">conectando…</span></span>
+  </div>
+
+  <table>
+    <thead><tr>
+      <th></th><th>Atividade</th><th>Status</th><th>Responsáveis</th><th>Status diário</th><th></th>
+    </tr></thead>
+    <tbody id="rows"></tbody>
+  </table>
+
+  <div class="foot">
+    <b>Priorização por loja</b> (arraste pelo <b>⠿</b>) · cada loja tem 1+ atividades, com responsável e etapa próprios. &nbsp;·&nbsp;
+    <b>Frame da daily (sugestão):</b> ↑ Andou · <span style="color:var(--amb)">⚠ Trava</span> (de quem depende) · → Próximos passos. &nbsp;·&nbsp;
+    Verde = executando agora (Descoberta + Em execução). Concluída afunda dentro da loja e volta ao desmarcar.
+  </div>
+
+<script>
+const STATUS={descoberta:'Descoberta',execucao:'Em execução',sequencia:'Backlog',aguardando:'Aguardando loja'};
+const STATUS_COL={descoberta:'#2563eb',execucao:'#16a34a',sequencia:'#6b7280',aguardando:'#d97706'};
+const ACTIVE=['descoberta','execucao'];
+const MES=['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
+const TITLE={sarue:'Sarue · Board da Sprint',guardiao:'Guardião · Board da Sprint'};
+
+let state={boards:{},current:'sarue',filterPerson:'',hideDone:false,editingId:null,expanded:{}};
+const board=()=>state.boards[state.current];
+
+function uid(){return Math.random().toString(36).slice(2,8)}
+function todayISO(){return new Date().toISOString().slice(0,10)}
+function fmt(iso){const d=new Date(iso+'T00:00');return String(d.getDate()).padStart(2,'0')+'/'+MES[d.getMonth()]}
+function daysSince(iso){return Math.floor((new Date(todayISO())-new Date(iso))/86400000)}
+function esc(s){return (s||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
+function A(nome,status,resps,log){return {id:uid(),nome,status,resps:resps||[],done:false,log:log||[]}}
+
+/* ---------- seeds ---------- */
+function seed(){
+  // SARUE — ordem: Problema no AB (Farmácia Indiana, Petit Jolie) → Customizações (rank do board AB)
+  state.boards.sarue={people:['Felix','Léo','Frare','Escobar','João','Ju'],lojas:[
+    {id:uid(),nome:'Farmácia Indiana',atividades:[
+      A('Acompanhar o teste A/B','execucao',['Léo'],[{date:'2026-06-13',autor:'Léo',texto:'↑ Andou: A/B rodando, monitorando conversão\n→ Próximos passos: aguardar começar a vencer'}])]},
+    {id:uid(),nome:'Petit Jolie',atividades:[
+      A('Customização de checkout + CRM','execucao',['Léo'],[{date:'2026-06-15',autor:'Léo',texto:'↑ Andou: checkout customizado no ar\n→ Próximos passos: testar o fluxo do cupom'}])]},
+    {id:uid(),nome:'Hering',atividades:[
+      A('Configurar GA4 do teste','sequencia',['Léo'],[])]},
+    {id:uid(),nome:'Tumelero',atividades:[
+      A('Subir o teste A/B','aguardando',['Frare'],[{date:'2026-06-12',autor:'Frare',texto:'⚠ Trava: loja sumiu, sem resposta (Cauã reativa o contato)'}])]},
+    {id:uid(),nome:'Elastobor',atividades:[
+      A('Migração da loja (reusar melhoria da Farmácia Indiana)','execucao',['Frare','João'],[{date:'2026-06-14',autor:'Frare',texto:'↑ Andou: KT com o João feito\n→ Próximos passos: começar a migração'}]),
+      A('Configurar e subir o teste A/B','sequencia',['Léo'],[])]},
+    {id:uid(),nome:'Pitstop',atividades:[
+      A('Integrar script na VTEX','sequencia',['Felix'],[])]},
+    {id:uid(),nome:'Acal Home',atividades:[
+      A('Incluir nome do responsável + CPF na retirada','sequencia',[],[{date:todayISO(),autor:'Nery',texto:'↑ Card criado no Jira (épico AB-49 · relacionado à FEAT-315)\n→ Próximos passos: requisito p/ subir o teste a 50% (controle de chargeback)'}])]},
+    {id:uid(),nome:'Wake',atividades:[
+      A('Integração da plataforma (definir passos + conexão)','descoberta',['Felix'],[{date:'2026-06-14',autor:'Felix',texto:'↑ Andou: mapeei os 4 endpoints\n⚠ Trava: espera o time tech da Wake (cobrar o Konrad)'}])]},
+  ]};
+  // GUARDIÃO — frentes ativas vindas do "quem toca o quê" (planning deck) + lojas de Pedido realizado.
+  const g=(nome)=>({id:uid(),nome,atividades:[A('(definir projeto)','sequencia',[],[])]});
+  const L=(nome,act,status,resps)=>({id:uid(),nome,atividades:[A(act,status,resps,[])]});
+  const M=(nome,acts)=>({id:uid(),nome,atividades:acts.map(x=>A(x[0],x[1]||'sequencia',x[2]||[],[]))});
+  state.boards.guardiao={people:['João','Lucas','Fernando','Cauã'],lojas:[
+    L('Le Blog Store','Bug 270 — pagamento não processado','aguardando',['Lucas']),
+    L('Caju Brasil','Destravar pagamento Apple Pay','execucao',['Fernando']),
+    L('Dakota','Apple Pay · Pagarme','aguardando',['Fernando']),
+    L('Toy Mania','Apple Pay · App Max','aguardando',['Fernando']),
+    L('Santa Lolla','Bug 160 — formulário de cartão de crédito','sequencia',[]),
+    L('Colormaq','Recaptcha','execucao',['Lucas']),
+    L('Resolver OTP','OTP por email e SMS (Zenvia)','descoberta',['João']),
+    L('Bombay','GA4 — tagueamento','sequencia',['João']),
+    M('Authen',[['Promoção "compre 1 leve 2" (crítico)']]),
+    M('Móveis Linhares',[['CEP para qualquer endereço'],['Google Pay (já ativo na VTEX)'],['Identidade visual do Pag-leve']]),
+    M('Democrata',[['Lentidão no pagamento (Franca-SP, igual Anatomic Gel)']]),
+    g('Constance Calçados'),
+    M('Menina Shoes',[['Cupom + código de vendedora']]),
+    g('Bio Extratus'),
+    M('CL Joias',[['Cashback (mesmo padrão de outras lojas)']]),
+    g('GoldKo'), g('UV LINE'),
+    M('Anatomic Gel',[['Lentidão / falha no pagamento (Franca-SP)']]),
+    g('Degalls'), g('Óticas Diniz'),
+    M('Pitstop',[['Integração do script no painel VTEX'],['Erro na retirada do pedido']]),
+  ]};
+}
+
+/* ---------- Supabase (sincronização compartilhada) ---------- */
+const SUPABASE_URL='https://vexmsgtlfcawctejgovt.supabase.co';
+const SUPABASE_ANON_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZleG1zZ3RsZmNhd2N0ZWpnb3Z0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE1NTM1NTQsImV4cCI6MjA5NzEyOTU1NH0.z3mfWvDapcATSuIeB9IeVCDypHyh0PK9MMehwoKiEhI';
+let sb=null,saveTimer=null,lastSavedJSON='',pendingRemote=null,online=false;
+
+function setSync(txt,col){const d=document.getElementById('syncDotC'),t=document.getElementById('syncDotT');if(d)d.style.background=col;if(t)t.textContent=txt;}
+function save(){ if(!online)return; setSync('salvando…','#d97706'); clearTimeout(saveTimer); saveTimer=setTimeout(pushAll,400); }
+async function pushAll(){
+  if(!sb)return;
+  lastSavedJSON=JSON.stringify(state.boards);
+  const {error}=await sb.from('board_state').update({data:state.boards,updated_at:new Date().toISOString()}).eq('id',1);
+  if(error){console.error('save',error);setSync('erro ao salvar','#dc2626');}else{setSync('salvo · online','#16a34a');}
+}
+function subscribeRealtime(){
+  sb.channel('board_state').on('postgres_changes',{event:'UPDATE',schema:'public',table:'board_state'},p=>{
+    const incoming=JSON.stringify(p.new.data);
+    if(incoming===lastSavedJSON)return;            // eco da própria escrita
+    if(state.editingId){pendingRemote=p.new.data;return;}  // não atropela edição aberta
+    state.boards=p.new.data;lastSavedJSON=incoming;render();setSync('atualizado agora','#16a34a');
+  }).subscribe();
+}
+function applyPendingRemote(){if(pendingRemote){state.boards=pendingRemote;lastSavedJSON=JSON.stringify(pendingRemote);pendingRemote=null;render();}}
+async function boot(){
+  setSync('conectando…','#8a8a90');
+  try{
+    sb=supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY);
+    const {data,error}=await sb.from('board_state').select('data').eq('id',1).single();
+    if(error)throw error;
+    if(data&&data.data&&data.data.sarue){state.boards=data.data;lastSavedJSON=JSON.stringify(data.data);}
+    else{seed();lastSavedJSON=JSON.stringify(state.boards);await sb.from('board_state').update({data:state.boards,updated_at:new Date().toISOString()}).eq('id',1);}
+    online=true;subscribeRealtime();setSync('online','#16a34a');
+  }catch(e){
+    console.warn('Supabase indisponível, modo local:',e);seed();setSync('local (offline)','#d97706');
+  }
+  render();
+}
+
+/* ---------- helpers ---------- */
+function LJ(id){return board().lojas.find(l=>l.id===id)}
+function ACT(actId){for(const l of board().lojas){const a=l.atividades.find(x=>x.id===actId);if(a)return a}return null}
+
+/* ---------- board / filters ---------- */
+function switchBoard(b){state.current=b;state.filterPerson='';state.editingId=null;save();render()}
+function setFilter(){state.filterPerson=document.getElementById('fPerson').value;state.hideDone=document.getElementById('fHide').checked;render()}
+
+/* ---------- mutations: loja ---------- */
+function addLoja(){board().lojas.push({id:uid(),nome:'Nova loja',atividades:[A('Nova atividade','sequencia',[],[])]});save();render()}
+function delLoja(id){if(confirm('Apagar esta loja e todas as suas atividades?')){board().lojas=board().lojas.filter(l=>l.id!==id);save();render()}}
+function updLojaName(id,val){const l=LJ(id);if(l){l.nome=val;save()}}
+
+/* ---------- mutations: atividade ---------- */
+function addAct(lojaId){LJ(lojaId).atividades.push(A('Nova atividade','sequencia',[],[]));save();render()}
+function delAct(lojaId,actId){const l=LJ(lojaId);if(confirm('Apagar esta atividade?')){l.atividades=l.atividades.filter(a=>a.id!==actId);save();render()}}
+function updAct(actId,key,val){const a=ACT(actId);if(a){a[key]=val;save();render()}}
+function updActName(actId,val){const a=ACT(actId);if(a){a.nome=val;save()}}
+function toggleDone(actId){const a=ACT(actId);if(a){a.done=!a.done;save();render()}}
+
+function addResp(actId,name){const a=ACT(actId);if(name==='__new'){const n=prompt('Nome da pessoa:');if(n){if(!board().people.includes(n))board().people.push(n);if(!a.resps.includes(n))a.resps.push(n)}}else if(name&&!a.resps.includes(name)){a.resps.push(name)}save();render()}
+function removeResp(actId,name){const a=ACT(actId);a.resps=a.resps.filter(r=>r!==name);save();render()}
+
+/* ---------- log ---------- */
+function openComposer(actId){state.editingId=actId;render();const f=document.getElementById('inTexto');if(f)f.focus()}
+function cancelComposer(){state.editingId=null;render();applyPendingRemote();}
+function saveComposer(actId){
+  const texto=document.getElementById('inTexto').value.trim();
+  const autor=document.getElementById('inAutor').value;
+  const a=ACT(actId);
+  if(a&&texto){a.log.unshift({date:todayISO(),autor,texto});if(texto.includes('⚠')&&a.status!=='aguardando')a._suggest=true;}
+  pendingRemote=null;state.editingId=null;save();render();
+}
+function delLog(actId,idx){if(confirm('Apagar este status?')){ACT(actId).log.splice(idx,1);save();render()}}
+function applySuggest(actId,yes){const a=ACT(actId);if(a){if(yes)a.status='aguardando';a._suggest=false;save();render()}}
+function toggleHist(actId){state.expanded[actId]=!state.expanded[actId];render()}
+
+/* ---------- drag & drop (lojas) ---------- */
+let dragId=null;
+function onDragStart(e,id){dragId=id;e.dataTransfer.effectAllowed='move'}
+function onDragOver(e,id){e.preventDefault();if(dragId&&dragId!==id)e.currentTarget.classList.add('drag-over')}
+function onDragLeave(e){e.currentTarget.classList.remove('drag-over')}
+function onDrop(e,targetId){
+  e.preventDefault();document.querySelectorAll('tr.drag-over').forEach(t=>t.classList.remove('drag-over'));
+  if(!dragId||dragId===targetId)return;
+  const arr=board().lojas;
+  const item=arr.splice(arr.findIndex(l=>l.id===dragId),1)[0];
+  arr.splice(arr.findIndex(l=>l.id===targetId),0,item);
+  dragId=null;save();render();
+}
+
+/* ---------- render ---------- */
+function render(){
+  document.getElementById('title').textContent=TITLE[state.current];
+  document.getElementById('tab-sarue').className='tab'+(state.current==='sarue'?' on':'');
+  document.getElementById('tab-guardiao').className='tab'+(state.current==='guardiao'?' on':'');
+
+  const fp=document.getElementById('fPerson');
+  fp.innerHTML='<option value="">Todas as pessoas</option>'+board().people.map(p=>`<option ${state.filterPerson===p?'selected':''}>${p}</option>`).join('');
+  document.getElementById('fHide').checked=state.hideDone;
+
+  const c={descoberta:0,execucao:0,sequencia:0,aguardando:0,done:0};
+  board().lojas.forEach(l=>l.atividades.forEach(a=>{a.done?c.done++:c[a.status]++}));
+  document.getElementById('summary').innerHTML=
+    pill('#16a34a',(c.execucao+c.descoberta)+' executando agora')+
+    pill('#6b7280',c.sequencia+' no backlog')+
+    pill('#d97706',c.aguardando+' aguardando loja')+
+    pill('#b3b3b8',c.done+' concluídas');
+
+  const tb=document.getElementById('rows');tb.innerHTML='';
+  const allDone=l=>l.atividades.length>0&&l.atividades.every(a=>a.done);
+  const ordered=[...board().lojas.filter(l=>!allDone(l)),...board().lojas.filter(l=>allDone(l))];
+  ordered.forEach(l=>lojaRows(l).forEach(tr=>tb.appendChild(tr)));
+
+  const addtr=document.createElement('tr');addtr.className='addrow';
+  addtr.innerHTML=`<td colspan="6"><button onclick="addLoja()">+ adicionar loja</button></td>`;
+  tb.appendChild(addtr);
+}
+function pill(col,txt){return `<span class="pill"><span class="dot" style="background:${col}"></span>${txt}</span>`}
+
+function lojaRows(l){
+  let acts=l.atividades.filter(a=>(!state.filterPerson||(a.resps||[]).includes(state.filterPerson))&&(!state.hideDone||!a.done));
+  if(state.filterPerson&&acts.length===0)return [];
+  acts=[...acts.filter(a=>!a.done),...acts.filter(a=>a.done)];
+
+  const lojaDone=l.atividades.length>0&&l.atividades.every(a=>a.done);
+  const head=document.createElement('tr');head.className='lojahead'+(lojaDone?' done':'');
+  head.setAttribute('ondragover',`onDragOver(event,'${l.id}')`);
+  head.setAttribute('ondragleave','onDragLeave(event)');
+  head.setAttribute('ondrop',`onDrop(event,'${l.id}')`);
+  head.innerHTML=`<td colspan="6"><div class="lojahead-in">
+     <span class="handle" draggable="true" ondragstart="onDragStart(event,'${l.id}')">⠿</span>
+     <input class="lname" value="${esc(l.nome)}" onchange="updLojaName('${l.id}',this.value)">
+     <span class="spacer"></span>
+     <button class="add-act" onclick="addAct('${l.id}')">+ atividade</button>
+     <span class="dellja" onclick="delLoja('${l.id}')">×</span>
+  </div></td>`;
+
+  return [head,...acts.map(a=>actRow(l,a))];
+}
+
+function actRow(l,a){
+  const tr=document.createElement('tr');
+  const isActive=ACTIVE.includes(a.status)&&!a.done;
+  tr.className='act '+(isActive?'active ':'')+(a.done?'done':'');
+
+  const stale=(!a.done&&a.log[0]&&daysSince(a.log[0].date)>=2)?`<div class="stale">⏱ há ${daysSince(a.log[0].date)}d sem update</div>`:'';
+  const statSel=`<select class="chip" style="color:${STATUS_COL[a.status]};border-color:${STATUS_COL[a.status]}55" onchange="updAct('${a.id}','status',this.value)">`+
+    Object.keys(STATUS).map(k=>`<option value="${k}" ${a.status===k?'selected':''}>${STATUS[k]}</option>`).join('')+`</select>`;
+
+  const avail=board().people.filter(n=>!(a.resps||[]).includes(n));
+  const resps=`<div class="resps">`+
+    (a.resps||[]).map(n=>`<span class="rchip">${n}<i onclick="removeResp('${a.id}','${n}')">×</i></span>`).join('')+
+    `<select class="addresp" onchange="addResp('${a.id}',this.value)"><option value="">＋</option>`+
+      avail.map(n=>`<option value="${n}">${n}</option>`).join('')+`<option value="__new">+ nova…</option></select></div>`;
+
+  let log='';const full=a.log||[];
+  if(full.length){
+    log+=entryHTML(a.id,full[0],0,true);
+    if(full.length>1){
+      log+=`<span class="hist-toggle" onclick="toggleHist('${a.id}')">${state.expanded[a.id]?'▾ ocultar':'▸ histórico ('+(full.length-1)+')'}</span>`;
+      if(state.expanded[a.id]) log+=full.slice(1).map((e,i)=>entryHTML(a.id,e,i+1,false)).join('');
+    }
+  }else{ log+=`<div class="empty">— sem status ainda —</div>`; }
+
+  if(a._suggest) log+=`<div class="suggest">💡 tem trava (⚠) — mudar status p/ <b>Aguardando loja</b>?<a onclick="applySuggest('${a.id}',true)">sim</a><a onclick="applySuggest('${a.id}',false)" style="color:var(--mut)">não</a></div>`;
+
+  if(state.editingId===a.id){
+    const authors=(a.resps&&a.resps.length?a.resps:board().people);
+    log+=`<div class="composer">
+      <div class="hint">Sugestão: <b>↑ Andou</b> · <b style="color:var(--amb)">⚠ Trava</b> (de quem depende) · <b>→ Próximos passos</b> — escreva livre.</div>
+      <textarea id="inTexto" rows="4" placeholder="↑ Andou: &#10;⚠ Trava: &#10;→ Próximos passos: "></textarea>
+      <div class="row2">
+        <select class="ctrl" id="inAutor" style="padding:7px 9px;font-size:12px">${authors.map(n=>`<option>${n}</option>`).join('')}</select>
+        <button class="btn primary" onclick="saveComposer('${a.id}')">salvar status</button>
+        <button class="btn" onclick="cancelComposer()">cancelar</button>
+      </div></div>`;
+  }else{
+    log+=`<div class="addlog" onclick="openComposer('${a.id}')">+ status do dia</div>`;
+  }
+
+  tr.innerHTML=`
+    <td><div class="chk ${a.done?'on':''}" onclick="toggleDone('${a.id}')">${a.done?'✓':''}</div></td>
+    <td><input class="aname" value="${esc(a.nome)}" onchange="updActName('${a.id}',this.value)">${stale}</td>
+    <td>${statSel}</td>
+    <td>${resps}</td>
+    <td class="log">${log}</td>
+    <td><button class="del" onclick="delAct('${l.id}','${a.id}')">×</button></td>`;
+  return tr;
+}
+
+function entryHTML(actId,e,idx,latest){
+  return `<div class="entry ${latest?'latest':''}">
+    <div class="entry-head"><span>${fmt(e.date)} · ${esc(e.autor)}</span><i onclick="delLog('${actId}',${idx})">×</i></div>
+    <div class="entry-body">${esc(e.texto)}</div></div>`;
+}
+
+/* ---------- senha + boot ---------- */
+function tryGate(){
+  if(document.getElementById('gatePass').value==='comprarapida'){localStorage.setItem('boardAuth','cr');hideGate();}
+  else{document.getElementById('gateErr').style.display='block';}
+}
+function hideGate(){document.getElementById('gate').style.display='none';boot();}
+(function(){
+  const gp=document.getElementById('gatePass');
+  if(gp)gp.addEventListener('keydown',e=>{if(e.key==='Enter')tryGate();});
+  if(localStorage.getItem('boardAuth')==='cr')hideGate();
+})();
+</script>
+</body>
+</html>
