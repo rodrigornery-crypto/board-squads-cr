@@ -174,51 +174,9 @@ function A(nome,status,resps,log){return {id:uid(),nome,status,resps:resps||[],d
 
 /* ---------- seeds ---------- */
 function seed(){
-  // SARUE — ordem: Problema no AB (Farmácia Indiana, Petit Jolie) → Customizações (rank do board AB)
-  state.boards.sarue={people:['Felix','Léo','Frare','Escobar','João','Ju'],lojas:[
-    {id:uid(),nome:'Farmácia Indiana',atividades:[
-      A('Acompanhar o teste A/B','execucao',['Léo'],[{date:'2026-06-13',autor:'Léo',texto:'↑ Andou: A/B rodando, monitorando conversão\n→ Próximos passos: aguardar começar a vencer'}])]},
-    {id:uid(),nome:'Petit Jolie',atividades:[
-      A('Customização de checkout + CRM','execucao',['Léo'],[{date:'2026-06-15',autor:'Léo',texto:'↑ Andou: checkout customizado no ar\n→ Próximos passos: testar o fluxo do cupom'}])]},
-    {id:uid(),nome:'Hering',atividades:[
-      A('Configurar GA4 do teste','sequencia',['Léo'],[])]},
-    {id:uid(),nome:'Tumelero',atividades:[
-      A('Subir o teste A/B','aguardando',['Frare'],[{date:'2026-06-12',autor:'Frare',texto:'⚠ Trava: loja sumiu, sem resposta (Cauã reativa o contato)'}])]},
-    {id:uid(),nome:'Elastobor',atividades:[
-      A('Migração da loja (reusar melhoria da Farmácia Indiana)','execucao',['Frare','João'],[{date:'2026-06-14',autor:'Frare',texto:'↑ Andou: KT com o João feito\n→ Próximos passos: começar a migração'}]),
-      A('Configurar e subir o teste A/B','sequencia',['Léo'],[])]},
-    {id:uid(),nome:'Pitstop',atividades:[
-      A('Integrar script na VTEX','sequencia',['Felix'],[])]},
-    {id:uid(),nome:'Acal Home',atividades:[
-      A('Incluir nome do responsável + CPF na retirada','sequencia',[],[{date:todayISO(),autor:'Nery',texto:'↑ Card criado no Jira (épico AB-49 · relacionado à FEAT-315)\n→ Próximos passos: requisito p/ subir o teste a 50% (controle de chargeback)'}])]},
-    {id:uid(),nome:'Wake',atividades:[
-      A('Integração da plataforma (definir passos + conexão)','descoberta',['Felix'],[{date:'2026-06-14',autor:'Felix',texto:'↑ Andou: mapeei os 4 endpoints\n⚠ Trava: espera o time tech da Wake (cobrar o Konrad)'}])]},
-  ]};
-  // GUARDIÃO — frentes ativas vindas do "quem toca o quê" (planning deck) + lojas de Pedido realizado.
-  const g=(nome)=>({id:uid(),nome,atividades:[A('(definir projeto)','sequencia',[],[])]});
-  const L=(nome,act,status,resps)=>({id:uid(),nome,atividades:[A(act,status,resps,[])]});
-  const M=(nome,acts)=>({id:uid(),nome,atividades:acts.map(x=>A(x[0],x[1]||'sequencia',x[2]||[],[]))});
-  state.boards.guardiao={people:['João','Lucas','Fernando','Cauã'],lojas:[
-    L('Le Blog Store','Bug 270 — pagamento não processado','aguardando',['Lucas']),
-    L('Caju Brasil','Destravar pagamento Apple Pay','execucao',['Fernando']),
-    L('Dakota','Apple Pay · Pagarme','aguardando',['Fernando']),
-    L('Toy Mania','Apple Pay · App Max','aguardando',['Fernando']),
-    L('Santa Lolla','Bug 160 — formulário de cartão de crédito','sequencia',[]),
-    L('Colormaq','Recaptcha','execucao',['Lucas']),
-    L('Resolver OTP','OTP por email e SMS (Zenvia)','descoberta',['João']),
-    L('Bombay','GA4 — tagueamento','sequencia',['João']),
-    M('Authen',[['Promoção "compre 1 leve 2" (crítico)']]),
-    M('Móveis Linhares',[['CEP para qualquer endereço'],['Google Pay (já ativo na VTEX)'],['Identidade visual do Pag-leve']]),
-    M('Democrata',[['Lentidão no pagamento (Franca-SP, igual Anatomic Gel)']]),
-    g('Constance Calçados'),
-    M('Menina Shoes',[['Cupom + código de vendedora']]),
-    g('Bio Extratus'),
-    M('CL Joias',[['Cashback (mesmo padrão de outras lojas)']]),
-    g('GoldKo'), g('UV LINE'),
-    M('Anatomic Gel',[['Lentidão / falha no pagamento (Franca-SP)']]),
-    g('Degalls'), g('Óticas Diniz'),
-    M('Pitstop',[['Integração do script no painel VTEX'],['Erro na retirada do pedido']]),
-  ]};
+  // Fallback offline. Os dados reais vivem no Supabase (carregados em boot()).
+  state.boards.sarue={people:[],lojas:[]};
+  state.boards.guardiao={people:[],lojas:[]};
 }
 
 /* ---------- Supabase (sincronização compartilhada) ---------- */
