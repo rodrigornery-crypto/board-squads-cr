@@ -50,6 +50,55 @@
   .klog{font-size:11px;color:var(--mut);margin-top:8px;line-height:1.45;border-top:1px dashed var(--line);padding-top:6px}
   .kempty{font-size:12px;color:var(--mut2);text-align:center;padding:14px 0;font-style:italic}
 
+  /* ---- Cronograma (Gantt por pessoa) ---- */
+  .cg-wrap{padding-bottom:12px}
+  .cg-cfg{display:flex;gap:9px;align-items:center;margin-bottom:14px;font-size:13px;color:var(--mut);flex-wrap:wrap}
+  .cg-layout{display:flex;gap:14px;align-items:flex-start}
+  .cg-scroll{flex:1;min-width:0;overflow-x:auto;padding-bottom:8px}
+  .cg{min-width:max-content;border:1px solid var(--line);border-radius:12px;overflow:hidden;background:var(--card)}
+  .cg-row{display:flex;align-items:stretch;border-bottom:1px solid var(--line)}
+  .cg-row:last-child{border-bottom:none}
+  .cg-row.head{background:var(--band)}
+  .cg-label{flex:0 0 var(--lw);width:var(--lw);padding:9px 12px;display:flex;flex-direction:column;justify-content:center;gap:2px;
+    position:sticky;left:0;background:var(--card);z-index:4;border-right:1px solid var(--line)}
+  .cg-row.head .cg-label{background:var(--band);font-size:11px;letter-spacing:.09em;text-transform:uppercase;color:var(--mut2);font-weight:600}
+  .cg-pname{font-weight:600;font-size:14px}
+  .cg-cap{font-size:11px;color:var(--mut);font-variant-numeric:tabular-nums}
+  .cg-cap.over{color:var(--red);font-weight:600}
+  .cg-track{position:relative;flex:1;min-height:52px;
+    background-image:repeating-linear-gradient(90deg,transparent 0 calc(var(--cw) - 1px),var(--line) calc(var(--cw) - 1px) var(--cw))}
+  .cg-track.cg-dragover{background-color:var(--grnbg)}
+  .cg-row.head .cg-track{background-image:none;display:flex}
+  .cg-daycell{box-sizing:border-box;flex:0 0 var(--cw);width:var(--cw);text-align:center;padding:8px 0;border-right:1px solid var(--line)}
+  .cg-daycell.cg-buf{background:repeating-linear-gradient(45deg,#f0f0ec 0 6px,#f6f6f4 6px 12px)}
+  .cg-dow{font-size:10px;letter-spacing:.07em;text-transform:uppercase;color:var(--mut)}
+  .cg-date{font-size:13px;font-weight:600;color:var(--txt)}
+  .cg-block{position:absolute;box-sizing:border-box;height:38px;border-radius:8px;
+    display:flex;align-items:center;gap:4px;padding:0 5px;color:#fff;font-size:12px;font-weight:500;overflow:hidden;
+    cursor:grab;box-shadow:0 1px 3px rgba(0,0,0,.18);z-index:2}
+  .cg-block:active{cursor:grabbing}
+  .cg-block .bn{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .cg-block small{flex:none;opacity:.9;font-variant-numeric:tabular-nums}
+  .cg-step{flex:none;background:rgba(255,255,255,.25);border:none;color:#fff;width:17px;height:17px;border-radius:5px;
+    cursor:pointer;font-size:12px;line-height:1;display:flex;align-items:center;justify-content:center}
+  .cg-step:hover{background:rgba(255,255,255,.5)}
+  .cg-bound{position:absolute;top:0;bottom:0;width:0;border-left:2px dashed var(--red);opacity:.5;z-index:1;pointer-events:none}
+  .cg-empty-lane{position:absolute;left:12px;top:18px;color:var(--mut2);font-size:12px;font-style:italic}
+  /* caixa de candidatos */
+  .cg-box{flex:0 0 256px;border:1px solid var(--line);border-radius:12px;background:var(--card);padding:13px;position:sticky;top:10px;max-height:78vh;overflow-y:auto}
+  .cg-box.cg-dragover{border-color:var(--grn);background:var(--grnbg)}
+  .cg-box h3{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--mut);margin:0 0 4px;font-weight:600}
+  .cg-sec{font-size:10px;letter-spacing:.05em;text-transform:uppercase;color:var(--mut2);margin:13px 0 7px;font-weight:600;display:flex;align-items:center}
+  .cg-cand{border:1px solid var(--line);border-left:3px solid var(--mut2);border-radius:9px;padding:7px 9px;margin-bottom:6px;cursor:grab;background:var(--card)}
+  .cg-cand:active{cursor:grabbing}
+  .cg-cand .cn{font-size:13px;font-weight:500;line-height:1.3;color:var(--txt)}
+  .cg-cand .cm{font-size:10px;color:var(--mut);margin-top:3px;letter-spacing:.02em;display:flex;justify-content:space-between;gap:8px}
+  .cg-cand .cm span:first-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .cg-cand .cm span:last-child{flex:none}
+  .cg-box-empty{font-size:12px;color:var(--mut2);font-style:italic;padding:4px 0}
+  .cg-hint{font-size:11px;color:var(--mut);margin-top:12px;line-height:1.5;border-top:1px solid var(--line);padding-top:10px}
+  .cg-hint b{color:var(--txt)}
+
   .bar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:14px}
   .summary{display:flex;gap:7px;flex-wrap:wrap}
   .pill{font-size:11px;padding:4px 11px;border-radius:20px;border:1px solid var(--line);background:var(--card);
@@ -163,6 +212,7 @@
     <div class="viewswitch">
       <div class="vtab" id="view-lista" onclick="switchView('lista')">☰ Lista</div>
       <div class="vtab" id="view-kanban" onclick="switchView('kanban')">▦ Quadro</div>
+      <div class="vtab" id="view-crono" onclick="switchView('cronograma')">▤ Cronograma</div>
     </div>
   </div>
 
@@ -182,6 +232,7 @@
   </table>
 
   <div id="kanban" class="kanban" style="display:none"></div>
+  <div id="cronograma" class="cg-wrap" style="display:none"></div>
 
   <div class="foot">
     <b>Lista</b>: priorização por loja (arraste pelo <b>⠿</b>), cada loja com suas atividades. &nbsp;·&nbsp;
@@ -217,7 +268,7 @@ function todayISO(){return new Date().toISOString().slice(0,10)}
 function fmt(iso){const d=new Date(iso+'T00:00');return String(d.getDate()).padStart(2,'0')+'/'+MES[d.getMonth()]}
 function daysSince(iso){return Math.floor((new Date(todayISO())-new Date(iso))/86400000)}
 function esc(s){return (s||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
-function A(nome,status,resps,log){return {id:uid(),nome,status,resps:resps||[],done:false,log:log||[]}}
+function A(nome,status,resps,log){return {id:uid(),nome,status,resps:resps||[],done:false,log:log||[],dias:3}}
 
 /* ---------- seeds ---------- */
 function seed(){
@@ -320,11 +371,13 @@ function render(){
   document.getElementById('title').textContent=TITLE[state.current];
   document.getElementById('tab-sarue').className='tab'+(state.current==='sarue'?' on':'');
   document.getElementById('tab-guardiao').className='tab'+(state.current==='guardiao'?' on':'');
-  const isK=state.view==='kanban';
-  document.getElementById('view-lista').className='vtab'+(!isK?' on':'');
+  const v=state.view,isK=v==='kanban',isC=v==='cronograma',isL=!isK&&!isC;
+  document.getElementById('view-lista').className='vtab'+(isL?' on':'');
   document.getElementById('view-kanban').className='vtab'+(isK?' on':'');
-  document.getElementById('listTable').style.display=isK?'none':'';
+  document.getElementById('view-crono').className='vtab'+(isC?' on':'');
+  document.getElementById('listTable').style.display=isL?'':'none';
   document.getElementById('kanban').style.display=isK?'flex':'none';
+  document.getElementById('cronograma').style.display=isC?'block':'none';
 
   const fp=document.getElementById('fPerson');
   fp.innerHTML='<option value="">Todas as pessoas</option>'+board().people.map(p=>`<option ${state.filterPerson===p?'selected':''}>${p}</option>`).join('');
@@ -340,7 +393,7 @@ function render(){
     pill('#dc2626',c.bloqueado+' bloqueadas')+
     pill('#b3b3b8',c.done+' finalizadas');
 
-  if(isK)renderKanban();else renderList();
+  if(isK)renderKanban();else if(isC)renderCronograma();else renderList();
 }
 function pill(col,txt){return `<span class="pill"><span class="dot" style="background:${col}"></span>${txt}</span>`}
 
@@ -402,6 +455,147 @@ function onColDrop(e,col){
   const id=kdragId;kdragId=null;if(!id)return;
   const a=ACT(id);if(!a)return;
   if(col==='done'){a.done=true;}else{a.done=false;a.status=col;}
+  save();render();
+}
+
+/* ---------- render: Cronograma (Gantt por pessoa) ---------- */
+const DOW=['DOM','SEG','TER','QUA','QUI','SEX','SÁB'];
+function sprintCfg(){const b=board();if(!b.sprint)b.sprint={start:'2026-06-19',dias:10};return b.sprint;}
+function setSprint(k,v){const c=sprintCfg();c[k]=(k==='dias'?Math.max(1,+v||1):v);save();render();}
+function bumpDias(id,delta){const a=ACT(id);if(a){a.dias=Math.max(0,(a.dias||0)+delta);save();render();}}
+function workdays(startISO,n){
+  const out=[];let d=new Date(startISO+'T00:00');if(isNaN(d))d=new Date();
+  let guard=0;
+  while(out.length<n&&guard++<200){const w=d.getDay();if(w!==0&&w!==6)out.push(new Date(d));d.setDate(d.getDate()+1);}
+  return out;
+}
+const CG_CW=104, CG_ROWH=46, CG_BUF=6;
+const IN_SPRINT=['sprint','execucao','bloqueado'];
+function actDias(a){return Math.max(1,a.dias||3);}
+function packRows(items){
+  items.sort((a,b)=>a.start-b.start);
+  const ends=[];
+  items.forEach(it=>{
+    let r=ends.findIndex(e=>e<=it.start);
+    if(r<0){r=ends.length;ends.push(0);}
+    ends[r]=it.start+it.dias;it.row=r;
+  });
+  return Math.max(1,ends.length);
+}
+function renderCronograma(){
+  const wrap=document.getElementById('cronograma');
+  const cfg=sprintCfg();
+  const days=workdays(cfg.start,cfg.dias);
+  const SPR=cfg.dias;
+
+  let h=`<div class="cg-cfg">
+    <span>Sprint começa</span>
+    <input type="date" class="ctrl" value="${cfg.start}" onchange="setSprint('start',this.value)">
+    <input type="number" min="1" max="40" class="ctrl" style="width:62px" value="${cfg.dias}" onchange="setSprint('dias',this.value)">
+    <span>dias úteis</span>
+    <span class="spacer"></span>
+    <span style="font-size:11px">Arraste blocos p/ mudar o dia · arraste da caixa → faixa da pessoa p/ alocar · ＋/− mudam a duração · tracejado = fim da sprint.</span>
+  </div>`;
+
+  h+=`<div class="cg-layout"><div class="cg-scroll"><div class="cg" style="--cw:${CG_CW}px;--lw:184px">`;
+  // header
+  h+=`<div class="cg-row head"><div class="cg-label">Pessoa · carga</div><div class="cg-track">`;
+  days.forEach(d=>{h+=`<div class="cg-daycell"><div class="cg-dow">${DOW[d.getDay()]}</div><div class="cg-date">${String(d.getDate()).padStart(2,'0')}/${MES[d.getMonth()]}</div></div>`;});
+  for(let i=0;i<CG_BUF;i++)h+=`<div class="cg-daycell cg-buf"></div>`;
+  h+=`</div></div>`;
+
+  // quem tem item in-sprint sem dono?
+  let orphan=false;
+  board().lojas.forEach(l=>l.atividades.forEach(a=>{if(!a.done&&IN_SPRINT.includes(a.status)&&(a.resps||[]).length===0)orphan=true;}));
+  let lanes=board().people.slice();
+  if(state.filterPerson)lanes=lanes.filter(p=>p===state.filterPerson);
+  if(orphan&&!state.filterPerson)lanes.push('__none');
+
+  lanes.forEach(p=>{
+    const items=[];
+    board().lojas.forEach(l=>l.atividades.forEach(a=>{
+      if(a.done||!IN_SPRINT.includes(a.status))return;
+      const r=a.resps||[];
+      const mine=p==='__none'?r.length===0:r.includes(p);
+      if(mine)items.push({a,l,dias:actDias(a)});
+    }));
+    // starts: explícito ou sequencial
+    let cursor=0;
+    items.forEach(it=>{
+      if(typeof it.a.start==='number'&&it.a.start>=0)it.start=it.a.start;
+      else it.start=cursor;
+      cursor=Math.max(cursor,it.start+it.dias);
+    });
+    const nRows=items.length?packRows(items):1;
+    const total=items.reduce((s,it)=>s+it.dias,0);
+    const over=total>SPR;
+    const trackH=Math.max(52,nRows*CG_ROWH+8);
+
+    h+=`<div class="cg-row">
+      <div class="cg-label"><div class="cg-pname">${p==='__none'?'Sem responsável':esc(p)}</div>
+        <div class="cg-cap ${over?'over':''}">${total} de ${SPR} dias úteis${over?' ⚠':''}</div></div>
+      <div class="cg-track" data-person="${p}" ondragover="onCgOver(event)" ondragleave="onCgLeave(event)" ondrop="onCgDrop(event)" style="height:${trackH}px">
+        <div class="cg-bound" style="left:calc(var(--cw) * ${SPR})"></div>`;
+    if(!items.length)h+=`<span class="cg-empty-lane">— sem atividades na sprint —</span>`;
+    items.forEach(it=>{
+      const stage=STATUS[it.a.status]?it.a.status:'sprint';
+      h+=`<div class="cg-block" draggable="true" ondragstart="onCgDragStart(event,'${it.a.id}','lane')"
+          title="${esc(it.l.nome)} · ${esc(it.a.nome)} — ${it.dias} dia(s)"
+          style="left:calc(var(--cw) * ${it.start} + 2px);width:calc(var(--cw) * ${it.dias} - 4px);top:${it.row*CG_ROWH+7}px;background:${STAGE_COL[stage]}">
+        <button class="cg-step" onclick="event.stopPropagation();bumpDias('${it.a.id}',-1)">−</button>
+        <span class="bn">${esc(it.a.nome)}</span><small>${it.dias}d</small>
+        <button class="cg-step" onclick="event.stopPropagation();bumpDias('${it.a.id}',1)">＋</button>
+      </div>`;
+    });
+    h+=`</div></div>`;
+  });
+  h+=`</div></div>`; // .cg .cg-scroll
+
+  // ---- caixa de candidatos ----
+  h+=`<div class="cg-box" ondragover="onCgBoxOver(event)" ondragleave="onCgLeave(event)" ondrop="onCgBoxDrop(event)">
+    <h3>Pendentes · arraste p/ a sprint</h3>`;
+  const sections=[['priorizar','A priorizar'],['backlog','Backlog']];
+  sections.forEach(([stg,label])=>{
+    const arr=[];
+    board().lojas.forEach(l=>l.atividades.forEach(a=>{if(!a.done&&a.status===stg)arr.push({a,l});}));
+    h+=`<div class="cg-sec"><span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:${STAGE_COL[stg]};margin-right:7px"></span>${label} (${arr.length})</div>`;
+    if(!arr.length){h+=`<div class="cg-box-empty">— vazio —</div>`;return;}
+    arr.forEach(x=>{
+      const resp=(x.a.resps||[]).length?esc(x.a.resps.join(', ')):'sem dono';
+      h+=`<div class="cg-cand" draggable="true" ondragstart="onCgDragStart(event,'${x.a.id}','box')" style="border-left-color:${STAGE_COL[stg]}" title="${esc(x.l.nome)} · ${esc(x.a.nome)}">
+        <div class="cn">${esc(x.a.nome)}</div>
+        <div class="cm"><span>${esc(x.l.nome)}</span><span>${resp} · ${actDias(x.a)}d</span></div>
+      </div>`;
+    });
+  });
+  h+=`<div class="cg-hint">Solte um card numa pessoa → vira <b>Sprint</b> e ela fica responsável. Arraste um bloco da sprint p/ cá → volta p/ <b>A priorizar</b>.</div>`;
+  h+=`</div></div>`; // .cg-box .cg-layout
+  wrap.innerHTML=h;
+}
+/* drag & drop do cronograma */
+let cgDragId=null,cgDragFrom=null;
+function onCgDragStart(e,id,from){cgDragId=id;cgDragFrom=from;e.dataTransfer.effectAllowed='move';try{e.dataTransfer.setData('text/plain',id)}catch(_){}}
+function onCgOver(e){e.preventDefault();e.currentTarget.classList.add('cg-dragover')}
+function onCgLeave(e){e.currentTarget.classList.remove('cg-dragover')}
+function onCgBoxOver(e){e.preventDefault();e.currentTarget.classList.add('cg-dragover')}
+function dayFromEvent(e,track){const r=track.getBoundingClientRect();return Math.max(0,Math.floor((e.clientX-r.left)/CG_CW));}
+function onCgDrop(e){
+  e.preventDefault();const track=e.currentTarget;track.classList.remove('cg-dragover');
+  const id=cgDragId,from=cgDragFrom;cgDragId=null;cgDragFrom=null;if(!id)return;
+  const a=ACT(id);if(!a)return;
+  const person=track.getAttribute('data-person');
+  a.start=dayFromEvent(e,track);
+  if(person==='__none')a.resps=[];
+  else if(person&&!(a.resps||[]).includes(person))a.resps=[person];
+  if(!a.dias)a.dias=3;
+  if(from==='box'&&(a.status==='backlog'||a.status==='priorizar'))a.status='sprint';
+  save();render();
+}
+function onCgBoxDrop(e){
+  e.preventDefault();e.currentTarget.classList.remove('cg-dragover');
+  const id=cgDragId,from=cgDragFrom;cgDragId=null;cgDragFrom=null;if(!id||from!=='lane')return;
+  const a=ACT(id);if(!a)return;
+  a.status='priorizar';delete a.start;
   save();render();
 }
 
