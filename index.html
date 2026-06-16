@@ -21,6 +21,34 @@
   .tab{padding:9px 20px;border-radius:10px;border:1px solid var(--line);background:var(--card);
     color:var(--mut);cursor:pointer;font-size:14px;font-weight:500}
   .tab.on{background:var(--txt);color:#fff;border-color:var(--txt)}
+  .viewswitch{margin-left:auto;display:flex;gap:6px}
+  .vtab{padding:9px 16px;border-radius:10px;border:1px solid var(--line);background:var(--card);
+    color:var(--mut);cursor:pointer;font-size:13px;font-weight:500}
+  .vtab.on{background:var(--grnbg);color:var(--grn);border-color:var(--grn)}
+
+  /* ---- Quadro / Kanban ---- */
+  .kanban{display:flex;gap:12px;overflow-x:auto;padding-bottom:10px;align-items:flex-start}
+  .kcol{flex:0 0 232px;background:var(--band);border:1px solid var(--line);border-radius:14px;padding:10px;min-height:140px}
+  .kcol.kover{border-color:var(--grn);box-shadow:0 0 0 2px var(--grnbg)}
+  .kcol-head{display:flex;align-items:center;gap:7px;font-size:11px;font-weight:600;letter-spacing:.05em;
+    color:var(--txt);text-transform:uppercase;padding:2px 4px 11px}
+  .kdot{width:8px;height:8px;border-radius:50%;display:inline-block;flex:none}
+  .kcount{margin-left:auto;color:var(--mut);font-size:11px;background:var(--card);border:1px solid var(--line);
+    border-radius:10px;padding:1px 8px;font-variant-numeric:tabular-nums}
+  .kcol-body{display:flex;flex-direction:column;gap:8px;min-height:48px}
+  .kcard{background:var(--card);border:1px solid var(--line);border-left:3px solid var(--mut2);border-radius:10px;
+    padding:9px 11px;cursor:grab;box-shadow:0 1px 2px rgba(0,0,0,.03)}
+  .kcard:active{cursor:grabbing}
+  .kcard.done{opacity:.6}
+  .kcard.done .kname{text-decoration:line-through;color:var(--mut)}
+  .kloja{font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--mut);margin-bottom:3px}
+  .kname{font-size:14px;font-weight:500;line-height:1.35;margin-bottom:8px;color:var(--txt)}
+  .kmeta{display:flex;flex-wrap:wrap;gap:4px;align-items:center}
+  .kresp{font-size:11px;background:#f0f0ee;border:1px solid var(--line);border-radius:12px;padding:2px 8px;color:var(--txt)}
+  .kresp.none{background:none;border:1px dashed var(--line);color:var(--mut2);font-style:italic}
+  .kstale{font-size:10px;color:var(--amb);margin-left:auto}
+  .klog{font-size:11px;color:var(--mut);margin-top:8px;line-height:1.45;border-top:1px dashed var(--line);padding-top:6px}
+  .kempty{font-size:12px;color:var(--mut2);text-align:center;padding:14px 0;font-style:italic}
 
   .bar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:14px}
   .summary{display:flex;gap:7px;flex-wrap:wrap}
@@ -132,6 +160,10 @@
   <div class="tabs">
     <div class="tab" id="tab-sarue" onclick="switchBoard('sarue')">Sarue</div>
     <div class="tab" id="tab-guardiao" onclick="switchBoard('guardiao')">Guardião</div>
+    <div class="viewswitch">
+      <div class="vtab" id="view-lista" onclick="switchView('lista')">☰ Lista</div>
+      <div class="vtab" id="view-kanban" onclick="switchView('kanban')">▦ Quadro</div>
+    </div>
   </div>
 
   <div class="bar">
@@ -142,27 +174,42 @@
     <span class="pill" style="margin-left:4px"><span class="dot" id="syncDotC" style="background:#8a8a90"></span><span id="syncDotT">conectando…</span></span>
   </div>
 
-  <table>
+  <table id="listTable">
     <thead><tr>
       <th></th><th>Atividade</th><th>Status</th><th>Responsáveis</th><th>Status diário</th><th></th>
     </tr></thead>
     <tbody id="rows"></tbody>
   </table>
 
+  <div id="kanban" class="kanban" style="display:none"></div>
+
   <div class="foot">
-    <b>Priorização por loja</b> (arraste pelo <b>⠿</b>) · cada loja tem 1+ atividades, com responsável e etapa próprios. &nbsp;·&nbsp;
-    <b>Frame da daily (sugestão):</b> ↑ Andou · <span style="color:var(--amb)">⚠ Trava</span> (de quem depende) · → Próximos passos. &nbsp;·&nbsp;
-    Verde = executando agora (Descoberta + Em execução). Concluída afunda dentro da loja e volta ao desmarcar.
+    <b>Lista</b>: priorização por loja (arraste pelo <b>⠿</b>), cada loja com suas atividades. &nbsp;·&nbsp;
+    <b>Quadro</b>: visão por etapa — arraste o card entre <b>Backlog → A priorizar → Sprint → Execução → Bloqueado → Finalizado</b>. &nbsp;·&nbsp;
+    <b>Frame da daily:</b> ↑ Andou · <span style="color:var(--amb)">⚠ Trava</span> (de quem depende) · → Próximos passos.
   </div>
 
 <script>
-const STATUS={descoberta:'Descoberta',execucao:'Em execução',sequencia:'Backlog',aguardando:'Aguardando loja'};
-const STATUS_COL={descoberta:'#2563eb',execucao:'#16a34a',sequencia:'#6b7280',aguardando:'#d97706'};
-const ACTIVE=['descoberta','execucao'];
+/* Etapas (fluxo do quadro / Kanban). 'done' é o estágio Finalizado (flag a.done). */
+const STAGES=['backlog','priorizar','sprint','execucao','bloqueado','done'];
+const STAGE_LABEL={backlog:'Backlog',priorizar:'A priorizar',sprint:'Sprint',execucao:'Execução',bloqueado:'Bloqueado',done:'Finalizado'};
+const STAGE_COL={backlog:'#6b7280',priorizar:'#7c3aed',sprint:'#2563eb',execucao:'#16a34a',bloqueado:'#dc2626',done:'#9aa0a6'};
+/* status editável (sem o estágio 'done', que é a flag) */
+const STATUS={backlog:'Backlog',priorizar:'A priorizar',sprint:'Sprint',execucao:'Execução',bloqueado:'Bloqueado'};
+const STATUS_COL={backlog:'#6b7280',priorizar:'#7c3aed',sprint:'#2563eb',execucao:'#16a34a',bloqueado:'#dc2626'};
+const ACTIVE=['execucao'];
+/* migração dos status antigos -> novas etapas */
+const STATUS_MIGRATE={sequencia:'backlog',descoberta:'sprint',aguardando:'bloqueado',execucao:'execucao'};
+function normalizeBoards(boards){
+  Object.values(boards||{}).forEach(bd=>{(bd.lojas||[]).forEach(l=>{(l.atividades||[]).forEach(a=>{
+    if(a.status&&!STATUS[a.status])a.status=STATUS_MIGRATE[a.status]||'backlog';
+  })})});
+  return boards;
+}
 const MES=['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
 const TITLE={sarue:'Sarue · Board da Sprint',guardiao:'Guardião · Board da Sprint'};
 
-let state={boards:{},current:'sarue',filterPerson:'',hideDone:false,editingId:null,expanded:{}};
+let state={boards:{},current:'sarue',view:'lista',filterPerson:'',hideDone:false,editingId:null,expanded:{}};
 const board=()=>state.boards[state.current];
 
 function uid(){return Math.random().toString(36).slice(2,8)}
@@ -197,17 +244,17 @@ function subscribeRealtime(){
     const incoming=JSON.stringify(p.new.data);
     if(incoming===lastSavedJSON)return;            // eco da própria escrita
     if(state.editingId){pendingRemote=p.new.data;return;}  // não atropela edição aberta
-    state.boards=p.new.data;lastSavedJSON=incoming;render();setSync('atualizado agora','#16a34a');
+    state.boards=normalizeBoards(p.new.data);lastSavedJSON=incoming;render();setSync('atualizado agora','#16a34a');
   }).subscribe();
 }
-function applyPendingRemote(){if(pendingRemote){state.boards=pendingRemote;lastSavedJSON=JSON.stringify(pendingRemote);pendingRemote=null;render();}}
+function applyPendingRemote(){if(pendingRemote){state.boards=normalizeBoards(pendingRemote);lastSavedJSON=JSON.stringify(pendingRemote);pendingRemote=null;render();}}
 async function boot(){
   setSync('conectando…','#8a8a90');
   try{
     sb=supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY);
     const {data,error}=await sb.from('board_state').select('data').eq('id',1).single();
     if(error)throw error;
-    if(data&&data.data&&data.data.sarue){state.boards=data.data;lastSavedJSON=JSON.stringify(data.data);}
+    if(data&&data.data&&data.data.sarue){state.boards=normalizeBoards(data.data);lastSavedJSON=JSON.stringify(data.data);}
     else{seed();lastSavedJSON=JSON.stringify(state.boards);await sb.from('board_state').update({data:state.boards,updated_at:new Date().toISOString()}).eq('id',1);}
     online=true;subscribeRealtime();setSync('online','#16a34a');
   }catch(e){
@@ -221,16 +268,17 @@ function LJ(id){return board().lojas.find(l=>l.id===id)}
 function ACT(actId){for(const l of board().lojas){const a=l.atividades.find(x=>x.id===actId);if(a)return a}return null}
 
 /* ---------- board / filters ---------- */
-function switchBoard(b){state.current=b;state.filterPerson='';state.editingId=null;save();render()}
+function switchBoard(b){state.current=b;state.filterPerson='';state.editingId=null;render()}
+function switchView(v){state.view=v;state.editingId=null;render()}
 function setFilter(){state.filterPerson=document.getElementById('fPerson').value;state.hideDone=document.getElementById('fHide').checked;render()}
 
 /* ---------- mutations: loja ---------- */
-function addLoja(){board().lojas.push({id:uid(),nome:'Nova loja',atividades:[A('Nova atividade','sequencia',[],[])]});save();render()}
+function addLoja(){board().lojas.push({id:uid(),nome:'Nova loja',atividades:[A('Nova atividade','backlog',[],[])]});save();render()}
 function delLoja(id){if(confirm('Apagar esta loja e todas as suas atividades?')){board().lojas=board().lojas.filter(l=>l.id!==id);save();render()}}
 function updLojaName(id,val){const l=LJ(id);if(l){l.nome=val;save()}}
 
 /* ---------- mutations: atividade ---------- */
-function addAct(lojaId){LJ(lojaId).atividades.push(A('Nova atividade','sequencia',[],[]));save();render()}
+function addAct(lojaId){LJ(lojaId).atividades.push(A('Nova atividade','backlog',[],[]));save();render()}
 function delAct(lojaId,actId){const l=LJ(lojaId);if(confirm('Apagar esta atividade?')){l.atividades=l.atividades.filter(a=>a.id!==actId);save();render()}}
 function updAct(actId,key,val){const a=ACT(actId);if(a){a[key]=val;save();render()}}
 function updActName(actId,val){const a=ACT(actId);if(a){a.nome=val;save()}}
@@ -246,11 +294,11 @@ function saveComposer(actId){
   const texto=document.getElementById('inTexto').value.trim();
   const autor=document.getElementById('inAutor').value;
   const a=ACT(actId);
-  if(a&&texto){a.log.unshift({date:todayISO(),autor,texto});if(texto.includes('⚠')&&a.status!=='aguardando')a._suggest=true;}
+  if(a&&texto){a.log.unshift({date:todayISO(),autor,texto});if(texto.includes('⚠')&&a.status!=='bloqueado')a._suggest=true;}
   pendingRemote=null;state.editingId=null;save();render();
 }
 function delLog(actId,idx){if(confirm('Apagar este status?')){ACT(actId).log.splice(idx,1);save();render()}}
-function applySuggest(actId,yes){const a=ACT(actId);if(a){if(yes)a.status='aguardando';a._suggest=false;save();render()}}
+function applySuggest(actId,yes){const a=ACT(actId);if(a){if(yes){a.status='bloqueado';a.done=false}a._suggest=false;save();render()}}
 function toggleHist(actId){state.expanded[actId]=!state.expanded[actId];render()}
 
 /* ---------- drag & drop (lojas) ---------- */
@@ -272,19 +320,31 @@ function render(){
   document.getElementById('title').textContent=TITLE[state.current];
   document.getElementById('tab-sarue').className='tab'+(state.current==='sarue'?' on':'');
   document.getElementById('tab-guardiao').className='tab'+(state.current==='guardiao'?' on':'');
+  const isK=state.view==='kanban';
+  document.getElementById('view-lista').className='vtab'+(!isK?' on':'');
+  document.getElementById('view-kanban').className='vtab'+(isK?' on':'');
+  document.getElementById('listTable').style.display=isK?'none':'';
+  document.getElementById('kanban').style.display=isK?'flex':'none';
 
   const fp=document.getElementById('fPerson');
   fp.innerHTML='<option value="">Todas as pessoas</option>'+board().people.map(p=>`<option ${state.filterPerson===p?'selected':''}>${p}</option>`).join('');
   document.getElementById('fHide').checked=state.hideDone;
 
-  const c={descoberta:0,execucao:0,sequencia:0,aguardando:0,done:0};
-  board().lojas.forEach(l=>l.atividades.forEach(a=>{a.done?c.done++:c[a.status]++}));
+  const c={backlog:0,priorizar:0,sprint:0,execucao:0,bloqueado:0,done:0};
+  board().lojas.forEach(l=>l.atividades.forEach(a=>{a.done?c.done++:c[a.status]=(c[a.status]||0)+1}));
   document.getElementById('summary').innerHTML=
-    pill('#16a34a',(c.execucao+c.descoberta)+' executando agora')+
-    pill('#6b7280',c.sequencia+' no backlog')+
-    pill('#d97706',c.aguardando+' aguardando loja')+
-    pill('#b3b3b8',c.done+' concluídas');
+    pill('#16a34a',c.execucao+' em execução')+
+    pill('#2563eb',c.sprint+' em sprint')+
+    pill('#7c3aed',c.priorizar+' a priorizar')+
+    pill('#6b7280',c.backlog+' no backlog')+
+    pill('#dc2626',c.bloqueado+' bloqueadas')+
+    pill('#b3b3b8',c.done+' finalizadas');
 
+  if(isK)renderKanban();else renderList();
+}
+function pill(col,txt){return `<span class="pill"><span class="dot" style="background:${col}"></span>${txt}</span>`}
+
+function renderList(){
   const tb=document.getElementById('rows');tb.innerHTML='';
   const allDone=l=>l.atividades.length>0&&l.atividades.every(a=>a.done);
   const ordered=[...board().lojas.filter(l=>!allDone(l)),...board().lojas.filter(l=>allDone(l))];
@@ -294,7 +354,56 @@ function render(){
   addtr.innerHTML=`<td colspan="6"><button onclick="addLoja()">+ adicionar loja</button></td>`;
   tb.appendChild(addtr);
 }
-function pill(col,txt){return `<span class="pill"><span class="dot" style="background:${col}"></span>${txt}</span>`}
+
+/* ---------- render: Quadro / Kanban ---------- */
+function renderKanban(){
+  const k=document.getElementById('kanban');k.innerHTML='';
+  const cols=state.hideDone?STAGES.filter(s=>s!=='done'):STAGES;
+  const cards=[];
+  board().lojas.forEach(l=>l.atividades.forEach(a=>{
+    if(state.filterPerson&&!(a.resps||[]).includes(state.filterPerson))return;
+    cards.push({a,l,stage:a.done?'done':(STATUS[a.status]?a.status:'backlog')});
+  }));
+  cols.forEach(col=>{
+    const list=cards.filter(c=>c.stage===col);
+    const colEl=document.createElement('div');colEl.className='kcol';
+    colEl.setAttribute('ondragover','onColOver(event)');
+    colEl.setAttribute('ondragleave','onColLeave(event)');
+    colEl.setAttribute('ondrop',`onColDrop(event,'${col}')`);
+    colEl.innerHTML=`<div class="kcol-head"><span class="kdot" style="background:${STAGE_COL[col]}"></span>${STAGE_LABEL[col]}<span class="kcount">${list.length}</span></div>`;
+    const body=document.createElement('div');body.className='kcol-body';
+    if(!list.length){const e=document.createElement('div');e.className='kempty';e.textContent='—';body.appendChild(e);}
+    list.forEach(c=>body.appendChild(kcard(c)));
+    colEl.appendChild(body);k.appendChild(colEl);
+  });
+}
+function kcard(c){
+  const {a,l,stage}=c;
+  const el=document.createElement('div');
+  el.className='kcard'+(a.done?' done':'');
+  el.draggable=true;
+  el.setAttribute('ondragstart',`onCardDrag(event,'${a.id}')`);
+  el.style.borderLeftColor=STAGE_COL[stage];
+  const resps=(a.resps||[]).length?(a.resps).map(n=>`<span class="kresp">${esc(n)}</span>`).join(''):`<span class="kresp none">sem responsável</span>`;
+  const stale=(!a.done&&a.log&&a.log[0]&&daysSince(a.log[0].date)>=2)?`<span class="kstale">⏱ ${daysSince(a.log[0].date)}d</span>`:'';
+  const lt=(a.log&&a.log[0])?a.log[0]:null;
+  const last=lt?`<div class="klog">${fmt(lt.date)} · ${esc((lt.texto||'').slice(0,80))}${(lt.texto||'').length>80?'…':''}</div>`:'';
+  el.innerHTML=`<div class="kloja">${esc(l.nome)}</div>
+    <div class="kname">${esc(a.nome)}</div>
+    <div class="kmeta">${resps}${stale}</div>${last}`;
+  return el;
+}
+let kdragId=null;
+function onCardDrag(e,id){kdragId=id;e.dataTransfer.effectAllowed='move';}
+function onColOver(e){e.preventDefault();e.currentTarget.classList.add('kover');}
+function onColLeave(e){e.currentTarget.classList.remove('kover');}
+function onColDrop(e,col){
+  e.preventDefault();document.querySelectorAll('.kcol.kover').forEach(x=>x.classList.remove('kover'));
+  const id=kdragId;kdragId=null;if(!id)return;
+  const a=ACT(id);if(!a)return;
+  if(col==='done'){a.done=true;}else{a.done=false;a.status=col;}
+  save();render();
+}
 
 function lojaRows(l){
   let acts=l.atividades.filter(a=>(!state.filterPerson||(a.resps||[]).includes(state.filterPerson))&&(!state.hideDone||!a.done));
@@ -341,7 +450,7 @@ function actRow(l,a){
     }
   }else{ log+=`<div class="empty">— sem status ainda —</div>`; }
 
-  if(a._suggest) log+=`<div class="suggest">💡 tem trava (⚠) — mudar status p/ <b>Aguardando loja</b>?<a onclick="applySuggest('${a.id}',true)">sim</a><a onclick="applySuggest('${a.id}',false)" style="color:var(--mut)">não</a></div>`;
+  if(a._suggest) log+=`<div class="suggest">💡 tem trava (⚠) — mudar status p/ <b>Bloqueado</b>?<a onclick="applySuggest('${a.id}',true)">sim</a><a onclick="applySuggest('${a.id}',false)" style="color:var(--mut)">não</a></div>`;
 
   if(state.editingId===a.id){
     const authors=(a.resps&&a.resps.length?a.resps:board().people);
