@@ -237,6 +237,31 @@
   .kstep:hover{border-color:var(--grn);color:var(--grn)}
   .aname-row{display:flex;align-items:center;gap:7px}
   .aname-row .aname{width:auto;flex:1}
+
+  /* ---- Apresentação ---- */
+  .pres-wrap{padding:4px 0 30px}
+  .pres-head{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:26px}
+  .pres-kicker{font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:var(--mut)}
+  .pres-title{font-family:Georgia,serif;font-size:30px;font-weight:600;margin:6px 0 0}
+  .pres-namebtn{flex:none;background:var(--card);border:1px solid var(--line);color:var(--mut);border-radius:9px;padding:8px 12px;font-size:12px;cursor:pointer}
+  .pres-namebtn:hover{border-color:var(--grn);color:var(--grn)}
+  .pres-empty{color:var(--mut2);font-style:italic;font-size:14px;padding:20px 0}
+  .pres-sec{margin-bottom:28px}
+  .pres-sec-title{display:flex;align-items:center;gap:9px;font-size:13px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--txt);margin-bottom:14px;padding-bottom:8px;border-bottom:1px solid var(--line)}
+  .pres-sec-title.small{font-size:11px;color:var(--mut);font-weight:600}
+  .pdot{width:11px;height:11px;border-radius:50%;flex:none;display:inline-block}
+  .pdot.alta{background:var(--red)}
+  .pdot.media{background:var(--amb);width:9px;height:9px;margin-right:7px;vertical-align:middle}
+  .pres-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px}
+  .pres-grid.big{grid-template-columns:repeat(auto-fill,minmax(360px,1fr));gap:16px}
+  .pres-card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px 18px}
+  .pres-card.alta{border-color:#f1c4c4;background:#fef5f5;box-shadow:0 1px 3px rgba(220,38,38,.08)}
+  .pc-loja{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--mut);margin-bottom:6px}
+  .pc-name{font-size:18px;font-weight:600;line-height:1.3;color:var(--txt)}
+  .pres-card.alta .pc-name{font-size:21px}
+  .pc-resp{font-size:13px;color:var(--mut);margin-top:9px}
+  .pres-done{display:flex;flex-wrap:wrap;gap:8px}
+  .done-chip{font-size:12px;background:var(--grnbg);border:1px solid #cfe9d6;color:#1d7a3a;border-radius:20px;padding:5px 12px}
 </style>
 </head>
 <body>
@@ -259,6 +284,7 @@
       <div class="vtab" id="view-lista" onclick="switchView('lista')">☰ Lista</div>
       <div class="vtab" id="view-kanban" onclick="switchView('kanban')">▦ Quadro</div>
       <div class="vtab" id="view-crono" onclick="switchView('cronograma')">▤ Cronograma</div>
+      <div class="vtab" id="view-pres" onclick="switchView('apresentar')">★ Apresentar</div>
     </div>
   </div>
 
@@ -279,6 +305,7 @@
 
   <div id="kanban" class="kanban" style="display:none"></div>
   <div id="cronograma" class="cg-wrap" style="display:none"></div>
+  <div id="apresentar" class="pres-wrap" style="display:none"></div>
 
   <div class="foot">
     <b>Lista</b>: priorização por loja (arraste pelo <b>⠿</b>), cada loja com suas atividades. &nbsp;·&nbsp;
@@ -431,13 +458,17 @@ function render(){
   document.getElementById('title').textContent=TITLE[state.current];
   document.getElementById('tab-sarue').className='tab'+(state.current==='sarue'?' on':'');
   document.getElementById('tab-guardiao').className='tab'+(state.current==='guardiao'?' on':'');
-  const v=state.view,isK=v==='kanban',isC=v==='cronograma',isL=!isK&&!isC;
+  const v=state.view,isK=v==='kanban',isC=v==='cronograma',isPres=v==='apresentar',isL=!isK&&!isC&&!isPres;
   document.getElementById('view-lista').className='vtab'+(isL?' on':'');
   document.getElementById('view-kanban').className='vtab'+(isK?' on':'');
   document.getElementById('view-crono').className='vtab'+(isC?' on':'');
+  document.getElementById('view-pres').className='vtab'+(isPres?' on':'');
   document.getElementById('listTable').style.display=isL?'':'none';
   document.getElementById('kanban').style.display=isK?'flex':'none';
   document.getElementById('cronograma').style.display=isC?'block':'none';
+  document.getElementById('apresentar').style.display=isPres?'block':'none';
+  const barEl=document.querySelector('.bar');if(barEl)barEl.style.display=isPres?'none':'';
+  const footEl=document.querySelector('.foot');if(footEl)footEl.style.display=isPres?'none':'';
 
   const fp=document.getElementById('fPerson');
   fp.innerHTML='<option value="">Todas as pessoas</option>'+board().people.map(p=>`<option ${state.filterPerson===p?'selected':''}>${p}</option>`).join('');
@@ -453,7 +484,7 @@ function render(){
     pill('#dc2626',c.bloqueado+' bloqueadas')+
     pill('#b3b3b8',c.done+' finalizadas');
 
-  if(isK)renderKanban();else if(isC)renderCronograma();else renderList();
+  if(isK)renderKanban();else if(isC)renderCronograma();else if(isPres)renderApresentar();else renderList();
 }
 function pill(col,txt){return `<span class="pill"><span class="dot" style="background:${col}"></span>${txt}</span>`}
 
@@ -737,6 +768,66 @@ function hidePerson(name){const b=board();b.hiddenPeople=b.hiddenPeople||[];if(!
 function unhidePerson(name){const b=board();b.hiddenPeople=(b.hiddenPeople||[]).filter(p=>p!==name);save();render();}
 function onHideOver(e){e.preventDefault();e.currentTarget.classList.add('cg-dragover');}
 function onHideDrop(e){e.preventDefault();e.currentTarget.classList.remove('cg-dragover');const from=laneDragName;laneDragName=null;if(!from)return;hidePerson(from);}
+
+/* ---------- render: Apresentação (prioridades da sprint, sem prazos) ---------- */
+const PRES_TEMAS=['Pagamentos','Checkout & Conversão por loja','Produto / Epics','Saúde da plataforma','Outros'];
+const SQUAD_NAME={sarue:'Sarue',guardiao:'Guardião'};
+function presTema(loja,nome){
+  const L=(loja||'').toLowerCase(), s=((loja||'')+' '+(nome||'')).toLowerCase();
+  if(/epic|produto/.test(L)) return 'Produto / Epics';
+  if(/observabilidade|performance|painel|\bscript/.test(L)) return 'Saúde da plataforma';
+  if(/apple pay|pagar.?me|pag.?leve|google pay|\bpci\b|pagamento|antifraude|3ds/.test(s)) return 'Pagamentos';
+  if(/a\/b|\bteste\b|frete|cupom|vendedora|order ?bump|premium|\bcep\b|endere|nota fiscal|promo/.test(s)) return 'Checkout & Conversão por loja';
+  if(/observabilidade|performance|\bscript|\blog\b|painel|insight|recaptcha|\botp\b|ga4|taguea|evento|lentid|monitor|applypromotion|erro|500/.test(s)) return 'Saúde da plataforma';
+  return 'Outros';
+}
+function togglePresNames(){state.presNames=(state.presNames===false);render();}
+function presCard(o,cls){
+  const {l,a}=o;const names=state.presNames!==false;
+  const mediaDot=a.prioridade==='media'?'<span class="pdot media" title="prioridade média"></span>':'';
+  return `<div class="pres-card ${cls||''}">
+    <div class="pc-loja">${esc(l.nome)}</div>
+    <div class="pc-name">${mediaDot}${esc(a.nome)}</div>
+    ${names&&a.resps&&a.resps.length?`<div class="pc-resp">${a.resps.map(esc).join(' · ')}</div>`:''}
+  </div>`;
+}
+function renderApresentar(){
+  const b=board();const wrap=document.getElementById('apresentar');
+  const IN=['priorizar','sprint','execucao','bloqueado']; // escopo da sprint (backlog fica de fora)
+  const alta=[],temas={},done=[];
+  (b.lojas||[]).forEach(l=>(l.atividades||[]).forEach(a=>{
+    if(a.done){done.push({l,a});return;}
+    if(!IN.includes(a.status))return;
+    if(a.prioridade==='alta'){alta.push({l,a});return;}
+    const t=presTema(l.nome,a.nome);(temas[t]=temas[t]||[]).push({l,a});
+  }));
+  const names=state.presNames!==false;
+  let h=`<div class="pres-head">
+    <div>
+      <div class="pres-kicker">Compra Rápida · Squad ${SQUAD_NAME[state.current]||esc(state.current)}</div>
+      <h2 class="pres-title">O que vamos fazer nesta sprint</h2>
+    </div>
+    <button class="pres-namebtn" onclick="togglePresNames()">${names?'ocultar responsáveis':'mostrar responsáveis'}</button>
+  </div>`;
+
+  if(alta.length){
+    h+=`<section class="pres-sec"><div class="pres-sec-title"><span class="pdot alta"></span>Grandes prioridades</div>
+      <div class="pres-grid big">${alta.map(o=>presCard(o,'alta')).join('')}</div></section>`;
+  }
+  PRES_TEMAS.forEach(t=>{
+    if(!temas[t]||!temas[t].length)return;
+    h+=`<section class="pres-sec"><div class="pres-sec-title">${t}</div>
+      <div class="pres-grid">${temas[t].map(o=>presCard(o,'')).join('')}</div></section>`;
+  });
+  if(!alta.length&&!Object.keys(temas).length){
+    h+=`<div class="pres-empty">Nada em andamento na sprint. Marque atividades como Sprint/Execução (e prioridades 🔴) na Lista ou no Quadro.</div>`;
+  }
+  if(done.length){
+    h+=`<section class="pres-sec"><div class="pres-sec-title small">✓ Já entregue nesta sprint</div>
+      <div class="pres-done">${done.map(o=>`<span class="done-chip">${esc(o.l.nome)} · ${esc(o.a.nome)}</span>`).join('')}</div></section>`;
+  }
+  wrap.innerHTML=h;
+}
 
 function lojaRows(l){
   let acts=l.atividades.filter(a=>(!state.filterPerson||(a.resps||[]).includes(state.filterPerson))&&(!state.hideDone||!a.done));
