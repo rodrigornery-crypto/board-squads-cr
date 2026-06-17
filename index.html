@@ -65,7 +65,7 @@
   .cg-pname{font-weight:600;font-size:14px}
   .cg-cap{font-size:11px;color:var(--mut);font-variant-numeric:tabular-nums}
   .cg-cap.over{color:var(--red);font-weight:600}
-  .cg-track{position:relative;flex:1;min-height:52px;
+  .cg-track{position:relative;flex:1;min-height:72px;
     background-image:repeating-linear-gradient(90deg,transparent 0 calc(var(--cw) - 1px),var(--line) calc(var(--cw) - 1px) var(--cw))}
   .cg-track.cg-dragover{background-color:var(--grnbg)}
   .cg-row.head .cg-track{background-image:none;display:flex}
@@ -73,11 +73,11 @@
   .cg-daycell.cg-buf{background:repeating-linear-gradient(45deg,#f0f0ec 0 6px,#f6f6f4 6px 12px)}
   .cg-dow{font-size:10px;letter-spacing:.07em;text-transform:uppercase;color:var(--mut)}
   .cg-date{font-size:13px;font-weight:600;color:var(--txt)}
-  .cg-block{position:absolute;box-sizing:border-box;height:38px;border-radius:8px;
+  .cg-block{position:absolute;box-sizing:border-box;height:54px;border-radius:8px;
     display:flex;align-items:center;gap:4px;padding:0 5px;color:#fff;font-size:12px;font-weight:500;overflow:hidden;
     cursor:grab;box-shadow:0 1px 3px rgba(0,0,0,.18);z-index:2}
   .cg-block:active{cursor:grabbing}
-  .cg-block .bn{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .cg-block .bn{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600;font-size:12px;line-height:1.15}
   .cg-block small{flex:none;opacity:.9;font-variant-numeric:tabular-nums}
   .cg-step{flex:none;background:rgba(255,255,255,.25);border:none;color:#fff;width:17px;height:17px;border-radius:5px;
     cursor:pointer;font-size:12px;line-height:1;display:flex;align-items:center;justify-content:center}
@@ -191,6 +191,52 @@
   .gatebox input:focus{outline:none;border-color:var(--grn)}
   .gatebox button{width:100%;padding:11px;background:var(--grn);color:#fff;border:none;border-radius:9px;font-size:14px;cursor:pointer;font-weight:500}
   .gerr{color:var(--red);font-size:12px;margin-top:10px;display:none}
+
+  /* ---- Quadro: responsáveis + criar card ---- */
+  .kresp i{cursor:pointer;color:var(--mut2);font-style:normal;font-size:13px;margin-left:3px}
+  .kresp i:hover{color:var(--red)}
+  .kaddresp{font-size:11px;border:1px dashed var(--line);background:none;color:var(--mut);border-radius:12px;padding:2px 7px;cursor:pointer;appearance:none}
+  .kaddresp:focus{outline:none;border-color:var(--grn)}
+  .kadd{margin-top:6px;border:1px dashed var(--mut2);border-radius:9px;text-align:center;color:var(--mut);font-size:12px;padding:7px;cursor:pointer}
+  .kadd:hover{border-color:var(--grn);color:var(--grn)}
+  .kaddform{margin-top:6px;background:var(--card);border:1px solid var(--grn);border-radius:9px;padding:8px;display:flex;flex-direction:column;gap:6px}
+  .kaddname,.kaddloja{width:100%;border:1px solid var(--line);border-radius:7px;padding:6px 8px;font-size:13px;font-family:inherit}
+  .kaddname:focus,.kaddloja:focus{outline:none;border-color:var(--grn)}
+  .kaddbtns{display:flex;gap:6px}
+  .kaddbtns .btn{padding:6px 10px;font-size:12px}
+
+  /* ---- Cronograma: linha de hoje, controles de pessoa, card gordinho ---- */
+  .cg-today{position:absolute;top:0;bottom:0;width:0;border-left:2px dashed var(--blu);z-index:3;pointer-events:none}
+  .cg-daycell.cg-istoday{background:#eaf1ff}
+  .cg-daycell.cg-istoday .cg-date{color:var(--blu)}
+  .cg-label[draggable=true]{cursor:grab}
+  .cg-label[draggable=true]:active{cursor:grabbing}
+  .cg-label.lane-over{box-shadow:inset 0 3px 0 var(--grn)}
+  .cg-hide{cursor:pointer;color:var(--mut2);font-size:13px;margin-left:5px}
+  .cg-hide:hover{color:var(--red)}
+  .cg-hidezone{font-size:11px;color:var(--mut);border:1px dashed var(--line);border-radius:8px;padding:5px 10px}
+  .cg-hidezone.cg-dragover{border-color:var(--red);color:var(--red);background:#fdecec}
+  .cg-hidden-chip{font-size:11px;background:#f0f0ee;border:1px solid var(--line);border-radius:12px;padding:2px 8px;margin-left:5px;cursor:pointer;color:var(--mut)}
+  .cg-hidden-chip:hover{border-color:var(--grn);color:var(--grn)}
+  .cg-block .bn-wrap{flex:1;min-width:0;display:flex;flex-direction:column;justify-content:center;gap:1px;overflow:hidden}
+  .cg-block .b-loja{font-size:10px;line-height:1.1;opacity:.85;text-transform:uppercase;letter-spacing:.03em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+  /* ---- Prioridade ---- */
+  .prio-dot{width:13px;height:13px;border-radius:50%;border:1.5px solid var(--mut2);background:transparent;cursor:pointer;display:inline-block;flex:none;vertical-align:middle}
+  .prio-dot:hover{border-color:var(--txt)}
+  .prio-dot.alta{background:var(--red);border-color:var(--red)}
+  .prio-dot.media{background:var(--amb);border-color:var(--amb)}
+  .kcard.prio-alta{background:#fdecec;border-color:#f1c4c4}
+  .kcard.prio-media{background:#fdf6e9;border-color:#eedcb0}
+  .ktop{display:flex;align-items:center;gap:6px;margin-bottom:4px}
+  .ktop .kloja{margin-bottom:0;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .ktop-right{display:flex;align-items:center;gap:6px;flex:none}
+  .kdays-wrap{display:inline-flex;align-items:center;gap:3px}
+  .kdays{font-size:11px;color:var(--txt);font-variant-numeric:tabular-nums;min-width:22px;text-align:center}
+  .kstep{background:#f0f0ee;border:1px solid var(--line);color:var(--mut);width:18px;height:18px;border-radius:6px;cursor:pointer;font-size:13px;line-height:1;display:inline-flex;align-items:center;justify-content:center;padding:0}
+  .kstep:hover{border-color:var(--grn);color:var(--grn)}
+  .aname-row{display:flex;align-items:center;gap:7px}
+  .aname-row .aname{width:auto;flex:1}
 </style>
 </head>
 <body>
@@ -236,7 +282,9 @@
 
   <div class="foot">
     <b>Lista</b>: priorização por loja (arraste pelo <b>⠿</b>), cada loja com suas atividades. &nbsp;·&nbsp;
-    <b>Quadro</b>: visão por etapa — arraste o card entre <b>Backlog → A priorizar → Sprint → Execução → Bloqueado → Finalizado</b>. &nbsp;·&nbsp;
+    <b>Quadro</b>: arraste o card entre <b>Backlog → A priorizar → Sprint → Execução → Bloqueado → Finalizado</b>, atribua responsável e crie cards na própria coluna (<b>+ card</b>). &nbsp;·&nbsp;
+    <b>Cronograma</b>: Gantt por pessoa da sprint — reordene/oculte pessoas arrastando o nome, <span style="color:var(--blu)">linha azul = hoje</span>. &nbsp;·&nbsp;
+    <b>Prioridade:</b> clique no ponto p/ alternar <span style="color:var(--red)">● Alta</span> / <span style="color:var(--amb)">● Média</span> / ○ Neutra (destaca card e bloco). &nbsp;·&nbsp;
     <b>Frame da daily:</b> ↑ Andou · <span style="color:var(--amb)">⚠ Trava</span> (de quem depende) · → Próximos passos.
   </div>
 
@@ -249,22 +297,33 @@ const STAGE_COL={backlog:'#6b7280',priorizar:'#7c3aed',sprint:'#2563eb',execucao
 const STATUS={backlog:'Backlog',priorizar:'A priorizar',sprint:'Sprint',execucao:'Execução',bloqueado:'Bloqueado'};
 const STATUS_COL={backlog:'#6b7280',priorizar:'#7c3aed',sprint:'#2563eb',execucao:'#16a34a',bloqueado:'#dc2626'};
 const ACTIVE=['execucao'];
+/* prioridade da atividade: alta (vermelho), media (amarelo), neutra (sem campo) */
+const PRIO={alta:{label:'Alta',col:'#dc2626'},media:{label:'Média',col:'#d97706'}};
+const PRIO_ORDER=['','alta','media'];
+function prioClass(a){return a.prioridade&&PRIO[a.prioridade]?a.prioridade:'';}
+function prioTitle(a){const p=a.prioridade;return 'Prioridade: '+(p&&PRIO[p]?PRIO[p].label:'neutra')+' — clique p/ alternar';}
+function cyclePrio(actId){const a=ACT(actId);if(!a)return;const cur=prioClass(a);const nx=PRIO_ORDER[(PRIO_ORDER.indexOf(cur)+1)%PRIO_ORDER.length];if(nx)a.prioridade=nx;else delete a.prioridade;save();render();}
 /* migração dos status antigos -> novas etapas */
 const STATUS_MIGRATE={sequencia:'backlog',descoberta:'sprint',aguardando:'bloqueado',execucao:'execucao'};
 function normalizeBoards(boards){
-  Object.values(boards||{}).forEach(bd=>{(bd.lojas||[]).forEach(l=>{(l.atividades||[]).forEach(a=>{
-    if(a.status&&!STATUS[a.status])a.status=STATUS_MIGRATE[a.status]||'backlog';
-  })})});
+  Object.values(boards||{}).forEach(bd=>{
+    (bd.lojas||[]).forEach(l=>{(l.atividades||[]).forEach(a=>{
+      if(a.status&&!STATUS[a.status])a.status=STATUS_MIGRATE[a.status]||'backlog';
+    })});
+    if(!Array.isArray(bd.laneOrder))bd.laneOrder=[];
+    if(!Array.isArray(bd.hiddenPeople))bd.hiddenPeople=[];
+  });
   return boards;
 }
 const MES=['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
 const TITLE={sarue:'Sarue · Board da Sprint',guardiao:'Guardião · Board da Sprint'};
 
-let state={boards:{},current:'sarue',view:'lista',filterPerson:'',hideDone:false,editingId:null,expanded:{}};
+let state={boards:{},current:'sarue',view:'lista',filterPerson:'',hideDone:false,editingId:null,expanded:{},kAdding:null};
 const board=()=>state.boards[state.current];
 
 function uid(){return Math.random().toString(36).slice(2,8)}
-function todayISO(){return new Date().toISOString().slice(0,10)}
+function iso(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
+function todayISO(){return iso(new Date())}
 function fmt(iso){const d=new Date(iso+'T00:00');return String(d.getDate()).padStart(2,'0')+'/'+MES[d.getMonth()]}
 function daysSince(iso){return Math.floor((new Date(todayISO())-new Date(iso))/86400000)}
 function esc(s){return (s||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
@@ -275,6 +334,7 @@ function seed(){
   // Fallback offline. Os dados reais vivem no Supabase (carregados em boot()).
   state.boards.sarue={people:[],lojas:[]};
   state.boards.guardiao={people:[],lojas:[]};
+  normalizeBoards(state.boards);
 }
 
 /* ---------- Supabase (sincronização compartilhada) ---------- */
@@ -319,8 +379,8 @@ function LJ(id){return board().lojas.find(l=>l.id===id)}
 function ACT(actId){for(const l of board().lojas){const a=l.atividades.find(x=>x.id===actId);if(a)return a}return null}
 
 /* ---------- board / filters ---------- */
-function switchBoard(b){state.current=b;state.filterPerson='';state.editingId=null;render()}
-function switchView(v){state.view=v;state.editingId=null;render()}
+function switchBoard(b){state.current=b;state.filterPerson='';state.editingId=null;state.kAdding=null;render()}
+function switchView(v){state.view=v;state.editingId=null;state.kAdding=null;render()}
 function setFilter(){state.filterPerson=document.getElementById('fPerson').value;state.hideDone=document.getElementById('fHide').checked;render()}
 
 /* ---------- mutations: loja ---------- */
@@ -417,33 +477,69 @@ function renderKanban(){
     if(state.filterPerson&&!(a.resps||[]).includes(state.filterPerson))return;
     cards.push({a,l,stage:a.done?'done':(STATUS[a.status]?a.status:'backlog')});
   }));
+  const prank=x=>x.a.prioridade==='alta'?0:x.a.prioridade==='media'?1:2;
   cols.forEach(col=>{
-    const list=cards.filter(c=>c.stage===col);
+    const list=cards.filter(c=>c.stage===col).sort((x,y)=>prank(x)-prank(y));
     const colEl=document.createElement('div');colEl.className='kcol';
     colEl.setAttribute('ondragover','onColOver(event)');
     colEl.setAttribute('ondragleave','onColLeave(event)');
     colEl.setAttribute('ondrop',`onColDrop(event,'${col}')`);
     colEl.innerHTML=`<div class="kcol-head"><span class="kdot" style="background:${STAGE_COL[col]}"></span>${STAGE_LABEL[col]}<span class="kcount">${list.length}</span></div>`;
     const body=document.createElement('div');body.className='kcol-body';
-    if(!list.length){const e=document.createElement('div');e.className='kempty';e.textContent='—';body.appendChild(e);}
+    if(!list.length&&state.kAdding!==col){const e=document.createElement('div');e.className='kempty';e.textContent='—';body.appendChild(e);}
     list.forEach(c=>body.appendChild(kcard(c)));
+    if(state.kAdding===col){
+      const form=document.createElement('div');form.className='kaddform';
+      form.innerHTML=`<input id="kNewName" class="kaddname" placeholder="nome do card">
+        <select id="kNewLoja" class="kaddloja">${board().lojas.map(l=>`<option value="${l.id}">${esc(l.nome)}</option>`).join('')}<option value="__new">+ nova loja…</option></select>
+        <div class="kaddbtns"><button class="btn primary" onclick="kCreateCard('${col}')">criar</button><button class="btn" onclick="kCancelAdd()">cancelar</button></div>`;
+      body.appendChild(form);
+    }else{
+      const add=document.createElement('div');add.className='kadd';add.textContent='+ card';
+      add.setAttribute('onclick',`kStartAdd('${col}')`);
+      body.appendChild(add);
+    }
     colEl.appendChild(body);k.appendChild(colEl);
   });
+  if(state.kAdding){const f=document.getElementById('kNewName');if(f)f.focus();}
+}
+function kStartAdd(col){state.kAdding=col;render();}
+function kCancelAdd(){state.kAdding=null;render();}
+function kCreateCard(col){
+  const name=(document.getElementById('kNewName').value||'').trim()||'Nova atividade';
+  let lojaId=document.getElementById('kNewLoja').value;
+  if(lojaId==='__new'){const n=prompt('Nome da nova loja:');if(!n)return;const nl={id:uid(),nome:n,atividades:[]};board().lojas.push(nl);lojaId=nl.id;}
+  const l=LJ(lojaId);if(!l)return;
+  const act=A(name,col==='done'?'sprint':col,[],[]);
+  if(col==='done')act.done=true;
+  l.atividades.push(act);
+  state.kAdding=null;save();render();
 }
 function kcard(c){
   const {a,l,stage}=c;
   const el=document.createElement('div');
-  el.className='kcard'+(a.done?' done':'');
+  const pc=prioClass(a);
+  el.className='kcard'+(a.done?' done':'')+(pc?' prio-'+pc:'');
   el.draggable=true;
   el.setAttribute('ondragstart',`onCardDrag(event,'${a.id}')`);
   el.style.borderLeftColor=STAGE_COL[stage];
-  const resps=(a.resps||[]).length?(a.resps).map(n=>`<span class="kresp">${esc(n)}</span>`).join(''):`<span class="kresp none">sem responsável</span>`;
+  const prio=`<span class="prio-dot ${pc}" draggable="false" onmousedown="event.stopPropagation()" onclick="cyclePrio('${a.id}')" title="${prioTitle(a)}"></span>`;
+  const days=`<span class="kdays-wrap">`+
+    `<button class="kstep" draggable="false" onmousedown="event.stopPropagation()" onclick="event.stopPropagation();bumpDias('${a.id}',-1)" title="menos um dia">−</button>`+
+    `<span class="kdays" title="dias estimados">${actDias(a)}d</span>`+
+    `<button class="kstep" draggable="false" onmousedown="event.stopPropagation()" onclick="event.stopPropagation();bumpDias('${a.id}',1)" title="mais um dia">＋</button>`+
+    `</span>`;
   const stale=(!a.done&&a.log&&a.log[0]&&daysSince(a.log[0].date)>=2)?`<span class="kstale">⏱ ${daysSince(a.log[0].date)}d</span>`:'';
+  const avail=board().people.filter(n=>!(a.resps||[]).includes(n));
+  const resps=`<div class="kmeta">`+
+    (a.resps||[]).map(n=>`<span class="kresp">${esc(n)}<i draggable="false" onmousedown="event.stopPropagation()" onclick="removeResp('${a.id}','${n}')">×</i></span>`).join('')+
+    `<select class="kaddresp" draggable="false" onmousedown="event.stopPropagation()" onchange="addResp('${a.id}',this.value)"><option value="">＋ responsável</option>${avail.map(n=>`<option value="${n}">${n}</option>`).join('')}<option value="__new">+ nova…</option></select>`+
+    stale+`</div>`;
   const lt=(a.log&&a.log[0])?a.log[0]:null;
   const last=lt?`<div class="klog">${fmt(lt.date)} · ${esc((lt.texto||'').slice(0,80))}${(lt.texto||'').length>80?'…':''}</div>`:'';
-  el.innerHTML=`<div class="kloja">${esc(l.nome)}</div>
+  el.innerHTML=`<div class="ktop"><span class="kloja">${esc(l.nome)}</span><span class="ktop-right">${prio}${days}</span></div>
     <div class="kname">${esc(a.nome)}</div>
-    <div class="kmeta">${resps}${stale}</div>${last}`;
+    ${resps}${last}`;
   return el;
 }
 let kdragId=null;
@@ -460,7 +556,11 @@ function onColDrop(e,col){
 
 /* ---------- render: Cronograma (Gantt por pessoa) ---------- */
 const DOW=['DOM','SEG','TER','QUA','QUI','SEX','SÁB'];
-function sprintCfg(){const b=board();if(!b.sprint)b.sprint={start:'2026-06-19',dias:10};return b.sprint;}
+function sprintCfg(){
+  const b=board();
+  if(!b.sprint){const s=(b.sprints&&b.sprints[0]);b.sprint=s?{start:s.start,dias:s.dias}:{start:'2026-06-19',dias:10};}
+  return b.sprint;
+}
 function setSprint(k,v){const c=sprintCfg();c[k]=(k==='dias'?Math.max(1,+v||1):v);save();render();}
 function bumpDias(id,delta){const a=ACT(id);if(a){a.dias=Math.max(0,(a.dias||0)+delta);save();render();}}
 function workdays(startISO,n){
@@ -469,7 +569,7 @@ function workdays(startISO,n){
   while(out.length<n&&guard++<200){const w=d.getDay();if(w!==0&&w!==6)out.push(new Date(d));d.setDate(d.getDate()+1);}
   return out;
 }
-const CG_CW=104, CG_ROWH=46, CG_BUF=6;
+const CG_CW=104, CG_ROWH=64, CG_BUF=6;
 const IN_SPRINT=['sprint','execucao','bloqueado'];
 function actDias(a){return Math.max(1,a.dias||3);}
 function packRows(items){
@@ -484,31 +584,35 @@ function packRows(items){
 }
 function renderCronograma(){
   const wrap=document.getElementById('cronograma');
+  const b=board();
   const cfg=sprintCfg();
   const days=workdays(cfg.start,cfg.dias);
   const SPR=cfg.dias;
+  const todayIdx=days.findIndex(d=>iso(d)===todayISO());
+  const todayLine=todayIdx>=0?`<div class="cg-today" style="left:calc(var(--cw) * ${todayIdx} + var(--cw)/2)"></div>`:'';
+  const hidden=(b.hiddenPeople||[]);
 
   let h=`<div class="cg-cfg">
     <span>Sprint começa</span>
     <input type="date" class="ctrl" value="${cfg.start}" onchange="setSprint('start',this.value)">
     <input type="number" min="1" max="40" class="ctrl" style="width:62px" value="${cfg.dias}" onchange="setSprint('dias',this.value)">
     <span>dias úteis</span>
-    <span class="spacer"></span>
-    <span style="font-size:11px">Arraste blocos p/ mudar o dia · arraste da caixa → faixa da pessoa p/ alocar · ＋/− mudam a duração · tracejado = fim da sprint.</span>
-  </div>`;
+    <span class="cg-hidezone" ondragover="onHideOver(event)" ondragleave="onCgLeave(event)" ondrop="onHideDrop(event)">⊘ soltar pessoa p/ ocultar</span>
+    ${hidden.map(n=>`<span class="cg-hidden-chip" onclick="unhidePerson('${n}')" title="reexibir">${esc(n)} ×</span>`).join('')}
+  </div>
+  <div style="font-size:11px;color:var(--mut);margin:-4px 0 12px;line-height:1.5">Arraste blocos p/ mudar o dia · da caixa → faixa p/ alocar · ＋/− mudam a duração · <span style="color:var(--blu)">┊ azul = hoje</span> · <span style="color:var(--red)">┊ vermelho = fim da sprint</span> · arraste o nome da pessoa p/ reordenar (ou ⊘ p/ ocultar).</div>`;
 
   h+=`<div class="cg-layout"><div class="cg-scroll"><div class="cg" style="--cw:${CG_CW}px;--lw:184px">`;
   // header
   h+=`<div class="cg-row head"><div class="cg-label">Pessoa · carga</div><div class="cg-track">`;
-  days.forEach(d=>{h+=`<div class="cg-daycell"><div class="cg-dow">${DOW[d.getDay()]}</div><div class="cg-date">${String(d.getDate()).padStart(2,'0')}/${MES[d.getMonth()]}</div></div>`;});
+  days.forEach(d=>{const td=iso(d)===todayISO();h+=`<div class="cg-daycell${td?' cg-istoday':''}"><div class="cg-dow">${DOW[d.getDay()]}</div><div class="cg-date">${String(d.getDate()).padStart(2,'0')}/${MES[d.getMonth()]}</div></div>`;});
   for(let i=0;i<CG_BUF;i++)h+=`<div class="cg-daycell cg-buf"></div>`;
   h+=`</div></div>`;
 
   // quem tem item in-sprint sem dono?
   let orphan=false;
   board().lojas.forEach(l=>l.atividades.forEach(a=>{if(!a.done&&IN_SPRINT.includes(a.status)&&(a.resps||[]).length===0)orphan=true;}));
-  let lanes=board().people.slice();
-  if(state.filterPerson)lanes=lanes.filter(p=>p===state.filterPerson);
+  let lanes=cronoLanes();
   if(orphan&&!state.filterPerson)lanes.push('__none');
 
   lanes.forEach(p=>{
@@ -529,21 +633,26 @@ function renderCronograma(){
     const nRows=items.length?packRows(items):1;
     const total=items.reduce((s,it)=>s+it.dias,0);
     const over=total>SPR;
-    const trackH=Math.max(52,nRows*CG_ROWH+8);
+    const trackH=Math.max(72,nRows*CG_ROWH+8);
+    const drag=p==='__none'?'false':'true';
 
     h+=`<div class="cg-row">
-      <div class="cg-label"><div class="cg-pname">${p==='__none'?'Sem responsável':esc(p)}</div>
+      <div class="cg-label" draggable="${drag}" ondragstart="onLaneDrag(event,'${p}')" ondragover="onLaneOver(event)" ondragleave="onLaneLeave(event)" ondrop="onLaneDrop(event,'${p}')">
+        <div class="cg-pname">${p==='__none'?'Sem responsável':esc(p)}${p!=='__none'?` <span class="cg-hide" onclick="hidePerson('${p}')" title="ocultar">⊘</span>`:''}</div>
         <div class="cg-cap ${over?'over':''}">${total} de ${SPR} dias úteis${over?' ⚠':''}</div></div>
       <div class="cg-track" data-person="${p}" ondragover="onCgOver(event)" ondragleave="onCgLeave(event)" ondrop="onCgDrop(event)" style="height:${trackH}px">
-        <div class="cg-bound" style="left:calc(var(--cw) * ${SPR})"></div>`;
+        <div class="cg-bound" style="left:calc(var(--cw) * ${SPR})"></div>${todayLine}`;
     if(!items.length)h+=`<span class="cg-empty-lane">— sem atividades na sprint —</span>`;
     items.forEach(it=>{
       const stage=STATUS[it.a.status]?it.a.status:'sprint';
+      const pc=prioClass(it.a);
+      const ring=pc?`box-shadow:0 0 0 2.5px ${PRIO[pc].col},0 1px 3px rgba(0,0,0,.18);`:'';
       h+=`<div class="cg-block" draggable="true" ondragstart="onCgDragStart(event,'${it.a.id}','lane')"
-          title="${esc(it.l.nome)} · ${esc(it.a.nome)} — ${it.dias} dia(s)"
-          style="left:calc(var(--cw) * ${it.start} + 2px);width:calc(var(--cw) * ${it.dias} - 4px);top:${it.row*CG_ROWH+7}px;background:${STAGE_COL[stage]}">
+          title="${esc(it.l.nome)} · ${esc(it.a.nome)} — ${it.dias} dia(s)${pc?' · prioridade '+PRIO[pc].label:''}"
+          style="left:calc(var(--cw) * ${it.start} + 2px);width:calc(var(--cw) * ${it.dias} - 4px);top:${it.row*CG_ROWH+7}px;background:${STAGE_COL[stage]};${ring}">
         <button class="cg-step" onclick="event.stopPropagation();bumpDias('${it.a.id}',-1)">−</button>
-        <span class="bn">${esc(it.a.nome)}</span><small>${it.dias}d</small>
+        <div class="bn-wrap"><div class="b-loja">${esc(it.l.nome)}</div><div class="bn">${esc(it.a.nome)}</div></div>
+        <small>${it.dias}d</small>
         <button class="cg-step" onclick="event.stopPropagation();bumpDias('${it.a.id}',1)">＋</button>
       </div>`;
     });
@@ -598,6 +707,36 @@ function onCgBoxDrop(e){
   a.status='priorizar';delete a.start;
   save();render();
 }
+
+/* ---------- cronograma: ordem e ocultação de pessoas ---------- */
+function fullLaneOrder(){
+  const b=board();const ppl=b.people.slice();
+  const ord=(b.laneOrder||[]).filter(p=>ppl.includes(p));
+  const rest=ppl.filter(p=>!ord.includes(p));
+  return [...ord,...rest];
+}
+function cronoLanes(){
+  const b=board();
+  let lanes=fullLaneOrder().filter(p=>!(b.hiddenPeople||[]).includes(p));
+  if(state.filterPerson)lanes=lanes.filter(p=>p===state.filterPerson);
+  return lanes;
+}
+let laneDragName=null;
+function onLaneDrag(e,name){laneDragName=name;e.dataTransfer.effectAllowed='move';e.stopPropagation();try{e.dataTransfer.setData('text/plain',name)}catch(_){}}
+function onLaneOver(e){if(laneDragName){e.preventDefault();e.currentTarget.classList.add('lane-over');}}
+function onLaneLeave(e){e.currentTarget.classList.remove('lane-over');}
+function onLaneDrop(e,target){
+  e.preventDefault();e.stopPropagation();e.currentTarget.classList.remove('lane-over');
+  const from=laneDragName;laneDragName=null;
+  if(!from||from===target||target==='__none')return;
+  const b=board();let arr=fullLaneOrder().filter(p=>p!==from);
+  const ti=arr.indexOf(target);arr.splice(ti<0?arr.length:ti,0,from);
+  b.laneOrder=arr;save();render();
+}
+function hidePerson(name){const b=board();b.hiddenPeople=b.hiddenPeople||[];if(!b.hiddenPeople.includes(name))b.hiddenPeople.push(name);save();render();}
+function unhidePerson(name){const b=board();b.hiddenPeople=(b.hiddenPeople||[]).filter(p=>p!==name);save();render();}
+function onHideOver(e){e.preventDefault();e.currentTarget.classList.add('cg-dragover');}
+function onHideDrop(e){e.preventDefault();e.currentTarget.classList.remove('cg-dragover');const from=laneDragName;laneDragName=null;if(!from)return;hidePerson(from);}
 
 function lojaRows(l){
   let acts=l.atividades.filter(a=>(!state.filterPerson||(a.resps||[]).includes(state.filterPerson))&&(!state.hideDone||!a.done));
@@ -662,7 +801,7 @@ function actRow(l,a){
 
   tr.innerHTML=`
     <td><div class="chk ${a.done?'on':''}" onclick="toggleDone('${a.id}')">${a.done?'✓':''}</div></td>
-    <td><input class="aname" value="${esc(a.nome)}" onchange="updActName('${a.id}',this.value)">${stale}</td>
+    <td><div class="aname-row"><span class="prio-dot ${prioClass(a)}" onclick="cyclePrio('${a.id}')" title="${prioTitle(a)}"></span><input class="aname" value="${esc(a.nome)}" onchange="updActName('${a.id}',this.value)"></div>${stale}</td>
     <td>${statSel}</td>
     <td>${resps}</td>
     <td class="log">${log}</td>
