@@ -235,6 +235,8 @@
   .kdays{font-size:11px;color:var(--txt);font-variant-numeric:tabular-nums;min-width:22px;text-align:center}
   .kstep{background:#f0f0ee;border:1px solid var(--line);color:var(--mut);width:18px;height:18px;border-radius:6px;cursor:pointer;font-size:13px;line-height:1;display:inline-flex;align-items:center;justify-content:center;padding:0}
   .kstep:hover{border-color:var(--grn);color:var(--grn)}
+  .kdel{background:none;border:none;color:var(--mut2);cursor:pointer;font-size:16px;line-height:1;padding:0 1px;display:inline-flex;align-items:center}
+  .kdel:hover{color:var(--red)}
   .aname-row{display:flex;align-items:center;gap:7px}
   .aname-row .aname{width:auto;flex:1}
 
@@ -624,7 +626,7 @@ function kcard(c){
   const lt=(a.log&&a.log[0])?a.log[0]:null;
   const last=lt?`<div class="klog">${fmt(lt.date)} · ${esc((lt.texto||'').slice(0,80))}${(lt.texto||'').length>80?'…':''}</div>`:'';
   const jchip=jiraChip(a,{card:true});
-  el.innerHTML=`<div class="ktop"><span class="kloja">${esc(l.nome)}</span><span class="ktop-right">${prio}${days}</span></div>
+  el.innerHTML=`<div class="ktop"><span class="kloja">${esc(l.nome)}</span><span class="ktop-right">${prio}${days}<button class="kdel" draggable="false" onmousedown="event.stopPropagation()" onclick="event.stopPropagation();delAct('${l.id}','${a.id}')" title="apagar atividade">×</button></span></div>
     <div class="kname">${esc(a.nome)}</div>
     ${jchip?`<div class="kjira">${jchip}</div>`:''}${resps}${last}`;
   return el;
