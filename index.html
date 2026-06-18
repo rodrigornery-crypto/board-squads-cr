@@ -300,6 +300,16 @@
   .cg-daycell.cg-holiday .cg-dow,.cg-daycell.cg-holiday .cg-date{color:#9a9aa0}
   .cg-holtag{font-size:8px;line-height:1.05;color:#9a9aa0;margin-top:2px;text-transform:uppercase;letter-spacing:.02em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .cg-holcol{position:absolute;top:0;bottom:0;width:var(--cw);background:rgba(140,140,140,.14);z-index:0;pointer-events:none}
+
+  /* ---- link do Jira ---- */
+  .jira-row{margin-top:5px}
+  .jchip{display:inline-flex;align-items:center;gap:3px;font-size:11px;color:var(--blu);background:#eef3ff;border:1px solid #cfddf9;border-radius:12px;padding:2px 8px;text-decoration:none;font-weight:500}
+  .jchip:hover{border-color:var(--blu);background:#e3edff}
+  .jedit{cursor:pointer;color:var(--mut2);font-size:12px;margin-left:6px}
+  .jedit:hover{color:var(--blu)}
+  .jadd{cursor:pointer;font-size:11px;color:var(--mut);border:1px dashed var(--line);border-radius:12px;padding:2px 8px}
+  .jadd:hover{border-color:var(--blu);color:var(--blu)}
+  .kjira{margin:2px 0 7px}
 </style>
 </head>
 <body>
@@ -393,6 +403,13 @@ function fmt(iso){const d=new Date(iso+'T00:00');return String(d.getDate()).padS
 function daysSince(iso){return Math.floor((new Date(todayISO())-new Date(iso))/86400000)}
 function esc(s){return (s||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
 function A(nome,status,resps,log){return {id:uid(),nome,status,resps:resps||[],done:false,log:log||[],dias:3}}
+
+/* link p/ card do Jira (aceita chave tipo CHURN-58 ou URL colada) */
+const JIRA_BASE='https://compra-rapida.atlassian.net/browse/';
+function jiraUrl(a){const v=((a&&a.jira)||'').trim();if(!v)return null;if(/^https?:\/\//i.test(v))return v;if(/^[A-Za-z]+-\d+$/.test(v))return JIRA_BASE+v.toUpperCase();return null;}
+function jiraLabel(a){const v=((a&&a.jira)||'').trim();return /^[A-Za-z]+-\d+$/.test(v)?v.toUpperCase():'Jira';}
+function setJira(actId){const a=ACT(actId);if(!a)return;const v=prompt('Card do Jira (ex.: CHURN-58 ou cole o link):',a.jira||'');if(v===null)return;const t=v.trim();if(t)a.jira=t;else delete a.jira;save();render();}
+function jiraChip(a,opts){const ju=jiraUrl(a);if(!ju)return '';const guard=opts&&opts.card?'draggable="false" onmousedown="event.stopPropagation()" ':'';return `<a class="jchip" href="${ju}" target="_blank" rel="noopener" ${guard}onclick="event.stopPropagation()" title="abrir ${esc(jiraLabel(a))} no Jira">🔗 ${esc(jiraLabel(a))}</a>`;}
 
 /* ---------- seeds ---------- */
 function seed(){
@@ -606,9 +623,10 @@ function kcard(c){
     stale+`</div>`;
   const lt=(a.log&&a.log[0])?a.log[0]:null;
   const last=lt?`<div class="klog">${fmt(lt.date)} · ${esc((lt.texto||'').slice(0,80))}${(lt.texto||'').length>80?'…':''}</div>`:'';
+  const jchip=jiraChip(a,{card:true});
   el.innerHTML=`<div class="ktop"><span class="kloja">${esc(l.nome)}</span><span class="ktop-right">${prio}${days}</span></div>
     <div class="kname">${esc(a.nome)}</div>
-    ${resps}${last}`;
+    ${jchip?`<div class="kjira">${jchip}</div>`:''}${resps}${last}`;
   return el;
 }
 let kdragId=null;
@@ -667,6 +685,8 @@ function holidaysFor(year){
   fix(1,1,'Confraternização Universal');fix(4,21,'Tiradentes');fix(5,1,'Dia do Trabalho');
   fix(9,7,'Independência');fix(10,12,'N. Sra. Aparecida');fix(11,2,'Finados');
   fix(11,15,'Proclamação da República');fix(11,20,'Consciência Negra');fix(12,25,'Natal');
+  // São Paulo (cidade + estado)
+  fix(1,25,'Aniversário de São Paulo');fix(7,9,'Revolução Constitucionalista');
   const E=easterDate(year),mov=(off,name)=>{const d=new Date(E);d.setDate(d.getDate()+off);map[iso(d)]=name;};
   mov(-48,'Carnaval');mov(-47,'Carnaval');mov(-2,'Sexta-feira Santa');mov(60,'Corpus Christi');
   return map;
@@ -1024,7 +1044,7 @@ function actRow(l,a){
 
   tr.innerHTML=`
     <td><div class="chk ${a.done?'on':''}" onclick="toggleDone('${a.id}')">${a.done?'✓':''}</div></td>
-    <td><div class="aname-row"><span class="prio-dot ${prioClass(a)}" onclick="cyclePrio('${a.id}')" title="${prioTitle(a)}"></span><input class="aname" value="${esc(a.nome)}" onchange="updActName('${a.id}',this.value)"></div>${stale}</td>
+    <td><div class="aname-row"><span class="prio-dot ${prioClass(a)}" onclick="cyclePrio('${a.id}')" title="${prioTitle(a)}"></span><input class="aname" value="${esc(a.nome)}" onchange="updActName('${a.id}',this.value)"></div>${stale}<div class="jira-row">${jiraUrl(a)?jiraChip(a)+`<span class="jedit" onclick="setJira('${a.id}')" title="editar link">✎</span>`:`<span class="jadd" onclick="setJira('${a.id}')">+ Jira</span>`}</div></td>
     <td>${statSel}</td>
     <td>${resps}</td>
     <td class="log">${log}</td>
