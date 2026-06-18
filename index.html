@@ -262,6 +262,32 @@
   .pc-resp{font-size:13px;color:var(--mut);margin-top:9px}
   .pres-done{display:flex;flex-wrap:wrap;gap:8px}
   .done-chip{font-size:12px;background:var(--grnbg);border:1px solid #cfe9d6;color:#1d7a3a;border-radius:20px;padding:5px 12px}
+
+  /* ---- Cronograma: régua contínua + faixa de sprints ---- */
+  .cg-legend{font-size:11px;color:var(--mut);margin:-4px 0 12px;line-height:1.5}
+  .cg-legend b{color:var(--txt)}
+  .cg-hidden-lbl{font-size:11px;color:var(--mut2)}
+  .cg-row.sprintband .cg-label.cg-sb-label{background:var(--card);font-size:11px;letter-spacing:.09em;text-transform:uppercase;color:var(--mut2);font-weight:600}
+  .cg-sb-track{min-height:56px;background:var(--bg)}
+  .cg-sband{position:absolute;top:6px;bottom:6px;box-sizing:border-box;border:1px solid var(--line);border-radius:9px;background:#f4f4f1;padding:6px 9px;overflow:hidden}
+  .cg-sband.cur{border-color:var(--blu);background:#eef3ff}
+  .cg-sband-top{display:flex;align-items:center;gap:6px}
+  .cg-sname{flex:1;min-width:0;border:none;background:none;font-weight:600;font-size:13px;color:var(--txt);padding:0}
+  .cg-sname:focus{outline:none;border-bottom:1px solid var(--mut2)}
+  .cg-sb-actions{display:flex;align-items:center;gap:3px;flex:none}
+  .cg-step.sm{width:16px;height:16px;font-size:11px}
+  .cg-sdays{font-size:11px;color:var(--mut);font-variant-numeric:tabular-nums;min-width:20px;text-align:center}
+  .cg-seye,.cg-sdel{cursor:pointer;color:var(--mut2);font-size:12px}
+  .cg-seye:hover{color:var(--blu)}
+  .cg-sdel:hover{color:var(--red)}
+  .cg-sper{font-size:11px;color:var(--mut);margin-top:3px}
+  .cg-sresize{position:absolute;right:0;top:0;bottom:0;width:9px;cursor:ew-resize}
+  .cg-sresize:hover{background:rgba(37,99,235,.18)}
+  .cg-sbound{position:absolute;top:0;bottom:0;width:0;border-left:2px solid #b9b9b3;z-index:1;pointer-events:none}
+  .cg-daycell.spr-p0{background:#fbfbfa}
+  .cg-daycell.spr-p1{background:#eef1f7}
+  .cg-daycell.spr-start{border-left:2px solid #b9b9b3}
+  .cg-block.clipped{border-top-right-radius:2px;border-bottom-right-radius:2px}
 </style>
 </head>
 <body>
@@ -587,12 +613,28 @@ function onColDrop(e,col){
 
 /* ---------- render: Cronograma (Gantt por pessoa) ---------- */
 const DOW=['DOM','SEG','TER','QUA','QUI','SEX','SÁB'];
-function sprintCfg(){
+/* sprints: régua contínua. b.sprintStart (início da Sprint 1) + b.sprints[{id,nome,dias}] contíguas + b.hiddenSprints[] */
+let cgVis=[];
+function sprintsCfg(){
   const b=board();
-  if(!b.sprint){const s=(b.sprints&&b.sprints[0]);b.sprint=s?{start:s.start,dias:s.dias}:{start:'2026-06-19',dias:10};}
-  return b.sprint;
+  if(!b.sprintStart)b.sprintStart=(b.sprint&&b.sprint.start)||(b.sprints&&b.sprints[0]&&b.sprints[0].start)||'2026-06-19';
+  if(!Array.isArray(b.sprints)||!b.sprints.length)b.sprints=[{id:uid(),nome:'Sprint 1',dias:(b.sprint&&b.sprint.dias)||10}];
+  b.sprints.forEach((s,i)=>{if(!s.id)s.id=uid();if(!s.nome)s.nome='Sprint '+(i+1);s.dias=Math.max(1,+s.dias||10);if('start'in s)delete s.start;});
+  if(!Array.isArray(b.hiddenSprints))b.hiddenSprints=[];
+  return b;
 }
-function setSprint(k,v){const c=sprintCfg();c[k]=(k==='dias'?Math.max(1,+v||1):v);save();render();}
+function sprintRanges(b){let acc=0;return b.sprints.map(s=>{const r={s,startDay:acc,endDay:acc+s.dias};acc+=s.dias;return r;});}
+function setSprintStart(v){board().sprintStart=v;save();render();}
+function setSprintName(id,v){const s=board().sprints.find(x=>x.id===id);if(s){s.nome=v;save();}}
+function bumpSprintDias(id,d){const s=board().sprints.find(x=>x.id===id);if(s){s.dias=Math.max(1,(s.dias||1)+d);save();render();}}
+function addSprintAfter(){const b=board();b.sprints.push({id:uid(),nome:'Sprint '+(b.sprints.length+1),dias:b.sprints.length?b.sprints[b.sprints.length-1].dias:10});save();render();}
+function delSprint(id){const b=board();if(b.sprints.length<=1){alert('Mantenha ao menos uma sprint.');return;}if(confirm('Apagar este marcador de sprint? As atividades continuam, só some a faixa.')){b.sprints=b.sprints.filter(s=>s.id!==id);b.hiddenSprints=(b.hiddenSprints||[]).filter(x=>x!==id);save();render();}}
+function hideSprint(id){const b=board();b.hiddenSprints=b.hiddenSprints||[];if(!b.hiddenSprints.includes(id))b.hiddenSprints.push(id);save();render();}
+function unhideSprint(id){const b=board();b.hiddenSprints=(b.hiddenSprints||[]).filter(x=>x!==id);save();render();}
+let sprResize=null;
+function startSprintResize(e,id){e.preventDefault();e.stopPropagation();const s=board().sprints.find(x=>x.id===id);if(!s)return;sprResize={id,startX:e.clientX,startDias:s.dias};window.addEventListener('pointermove',onSprResizeMove);window.addEventListener('pointerup',endSprResize);}
+function onSprResizeMove(e){if(!sprResize)return;const nd=Math.max(1,sprResize.startDias+Math.round((e.clientX-sprResize.startX)/CG_CW));const s=board().sprints.find(x=>x.id===sprResize.id);if(s&&s.dias!==nd){s.dias=nd;save();render();}}
+function endSprResize(){sprResize=null;window.removeEventListener('pointermove',onSprResizeMove);window.removeEventListener('pointerup',endSprResize);}
 function bumpDias(id,delta){const a=ACT(id);if(a){a.dias=Math.max(0,(a.dias||0)+delta);save();render();}}
 function workdays(startISO,n){
   const out=[];let d=new Date(startISO+'T00:00');if(isNaN(d))d=new Date();
@@ -615,75 +657,117 @@ function packRows(items){
 }
 function renderCronograma(){
   const wrap=document.getElementById('cronograma');
-  const b=board();
-  const cfg=sprintCfg();
-  const days=workdays(cfg.start,cfg.dias);
-  const SPR=cfg.dias;
-  const todayIdx=days.findIndex(d=>iso(d)===todayISO());
-  const todayLine=todayIdx>=0?`<div class="cg-today" style="left:calc(var(--cw) * ${todayIdx} + var(--cw)/2)"></div>`:'';
+  const b=sprintsCfg();
+  const ranges=sprintRanges(b);
+  const totalSpr=ranges.length?ranges[ranges.length-1].endDay:10;
+  // estende a régua além das sprints (atividades que passam + buffer p/ rolar)
+  let maxEnd=totalSpr;
+  b.lojas.forEach(l=>l.atividades.forEach(a=>{if(!a.done&&IN_SPRINT.includes(a.status)){const e=((typeof a.start==='number'&&a.start>=0)?a.start:0)+actDias(a);if(e>maxEnd)maxEnd=e;}}));
+  const totalDays=maxEnd+CG_BUF;
+  const allDays=workdays(b.sprintStart,totalDays);
+  const hiddenSet=new Set(b.hiddenSprints||[]);
+  const dayRange=i=>ranges.find(r=>i>=r.startDay&&i<r.endDay);
+  const dayHidden=i=>{const r=dayRange(i);return r?hiddenSet.has(r.s.id):false;};
+  const vis=[];for(let i=0;i<allDays.length;i++)if(!dayHidden(i))vis.push(i);
+  const g2v={};vis.forEach((g,v)=>g2v[g]=v);
+  const nCols=vis.length;
+  cgVis=vis;
+  const todayGlobal=allDays.findIndex(d=>iso(d)===todayISO());
+  const todayV=(todayGlobal>=0&&g2v[todayGlobal]!=null)?g2v[todayGlobal]:-1;
+  // sprint atual (p/ carga): a que contém hoje pela data
+  let cur=ranges.find(r=>{const sd=allDays[r.startDay],ed=allDays[r.endDay-1];return sd&&ed&&iso(sd)<=todayISO()&&todayISO()<=iso(ed);});
+  if(!cur)cur=(todayGlobal>=0&&ranges.length&&todayGlobal>=ranges[ranges.length-1].endDay)?ranges[ranges.length-1]:ranges[0];
+  const SPRN=cur?cur.s.dias:totalSpr,curStart=cur?cur.startDay:0,curEnd=cur?cur.endDay:totalSpr;
   const hidden=(b.hiddenPeople||[]);
 
+  // overlay (hoje + divisórias de sprint) injetado em cada faixa
+  let overlay=todayV>=0?`<div class="cg-today" style="left:calc(var(--cw) * ${todayV} + var(--cw)/2)"></div>`:'';
+  ranges.forEach((r,idx)=>{if(idx===0||hiddenSet.has(r.s.id))return;const gv=g2v[r.startDay];if(gv!=null)overlay+=`<div class="cg-sbound" style="left:calc(var(--cw) * ${gv})"></div>`;});
+
   let h=`<div class="cg-cfg">
-    <span>Sprint começa</span>
-    <input type="date" class="ctrl" value="${cfg.start}" onchange="setSprint('start',this.value)">
-    <input type="number" min="1" max="40" class="ctrl" style="width:62px" value="${cfg.dias}" onchange="setSprint('dias',this.value)">
-    <span>dias úteis</span>
+    <span>Início (Sprint 1)</span>
+    <input type="date" class="ctrl" value="${b.sprintStart}" onchange="setSprintStart(this.value)">
+    <button class="btn" onclick="addSprintAfter()">+ nova sprint</button>
+    ${(b.hiddenSprints||[]).length?`<span class="cg-hidden-lbl">sprints ocultas:</span>`+(b.hiddenSprints||[]).map(id=>{const s=b.sprints.find(x=>x.id===id);return s?`<span class="cg-hidden-chip" onclick="unhideSprint('${id}')" title="reexibir">${esc(s.nome)} ↩</span>`:'';}).join(''):''}
     <span class="cg-hidezone" ondragover="onHideOver(event)" ondragleave="onCgLeave(event)" ondrop="onHideDrop(event)">⊘ soltar pessoa p/ ocultar</span>
     ${hidden.map(n=>`<span class="cg-hidden-chip" onclick="unhidePerson('${n}')" title="reexibir">${esc(n)} ×</span>`).join('')}
   </div>
-  <div style="font-size:11px;color:var(--mut);margin:-4px 0 12px;line-height:1.5">Arraste blocos p/ mudar o dia · da caixa → faixa p/ alocar · ＋/− mudam a duração · <span style="color:var(--blu)">┊ azul = hoje</span> · <span style="color:var(--red)">┊ vermelho = fim da sprint</span> · arraste o nome da pessoa p/ reordenar (ou ⊘ p/ ocultar).</div>`;
+  <div class="cg-legend">Régua contínua de semanas · arraste blocos p/ mover, ＋/− muda duração · na faixa do topo edite o nome, ± dias, arraste a borda ⟺, 👁 oculta a sprint · <span style="color:var(--blu)">┊ hoje</span> · carga calculada na <b>${esc(cur?cur.s.nome:'sprint')}</b>.</div>`;
 
   h+=`<div class="cg-layout"><div class="cg-scroll"><div class="cg" style="--cw:${CG_CW}px;--lw:184px">`;
-  // header
-  h+=`<div class="cg-row head"><div class="cg-label">Pessoa · carga</div><div class="cg-track">`;
-  days.forEach(d=>{const td=iso(d)===todayISO();h+=`<div class="cg-daycell${td?' cg-istoday':''}"><div class="cg-dow">${DOW[d.getDay()]}</div><div class="cg-date">${String(d.getDate()).padStart(2,'0')}/${MES[d.getMonth()]}</div></div>`;});
-  for(let i=0;i<CG_BUF;i++)h+=`<div class="cg-daycell cg-buf"></div>`;
+
+  // faixa de sprints (topo)
+  h+=`<div class="cg-row sprintband"><div class="cg-label cg-sb-label">Sprints</div><div class="cg-track cg-sb-track">`;
+  ranges.forEach(r=>{
+    if(hiddenSet.has(r.s.id))return;
+    const v0=g2v[r.startDay],v1=g2v[r.endDay-1];if(v0==null||v1==null)return;
+    const sd=allDays[r.startDay],ed=allDays[r.endDay-1];
+    const per=sd&&ed?`${String(sd.getDate()).padStart(2,'0')}/${MES[sd.getMonth()]} – ${String(ed.getDate()).padStart(2,'0')}/${MES[ed.getMonth()]}`:'';
+    const isCur=cur&&cur.s.id===r.s.id;
+    h+=`<div class="cg-sband${isCur?' cur':''}" style="left:calc(var(--cw) * ${v0});width:calc(var(--cw) * ${v1-v0+1})">
+      <div class="cg-sband-top">
+        <input class="cg-sname" value="${esc(r.s.nome)}" onchange="setSprintName('${r.s.id}',this.value)">
+        <span class="cg-sb-actions">
+          <button class="cg-step sm" onclick="bumpSprintDias('${r.s.id}',-1)" title="−1 dia útil">−</button>
+          <span class="cg-sdays">${r.s.dias}d</span>
+          <button class="cg-step sm" onclick="bumpSprintDias('${r.s.id}',1)" title="+1 dia útil">＋</button>
+          <span class="cg-seye" onclick="hideSprint('${r.s.id}')" title="ocultar sprint">👁</span>
+          <span class="cg-sdel" onclick="delSprint('${r.s.id}')" title="apagar marcador">×</span>
+        </span>
+      </div>
+      <div class="cg-sper">${per}</div>
+      <span class="cg-sresize" onpointerdown="startSprintResize(event,'${r.s.id}')" title="arraste p/ redimensionar"></span>
+    </div>`;
+  });
   h+=`</div></div>`;
 
-  // quem tem item in-sprint sem dono?
+  // header de dias
+  h+=`<div class="cg-row head"><div class="cg-label">Pessoa · carga</div><div class="cg-track">`;
+  vis.forEach(g=>{const d=allDays[g];const r=dayRange(g);const parity=r?(ranges.indexOf(r)%2):2;const isStart=r&&g===r.startDay;const td=iso(d)===todayISO();
+    h+=`<div class="cg-daycell spr-p${parity}${isStart?' spr-start':''}${td?' cg-istoday':''}"><div class="cg-dow">${DOW[d.getDay()]}</div><div class="cg-date">${String(d.getDate()).padStart(2,'0')}/${MES[d.getMonth()]}</div></div>`;});
+  h+=`</div></div>`;
+
+  // lanes
   let orphan=false;
-  board().lojas.forEach(l=>l.atividades.forEach(a=>{if(!a.done&&IN_SPRINT.includes(a.status)&&(a.resps||[]).length===0)orphan=true;}));
+  b.lojas.forEach(l=>l.atividades.forEach(a=>{if(!a.done&&IN_SPRINT.includes(a.status)&&(a.resps||[]).length===0)orphan=true;}));
   let lanes=cronoLanes();
   if(orphan&&!state.filterPerson)lanes.push('__none');
 
   lanes.forEach(p=>{
     const items=[];
-    board().lojas.forEach(l=>l.atividades.forEach(a=>{
+    b.lojas.forEach(l=>l.atividades.forEach(a=>{
       if(a.done||!IN_SPRINT.includes(a.status))return;
-      const r=a.resps||[];
-      const mine=p==='__none'?r.length===0:r.includes(p);
+      const r=a.resps||[];const mine=p==='__none'?r.length===0:r.includes(p);
       if(mine)items.push({a,l,dias:actDias(a)});
     }));
-    // starts: explícito ou sequencial
     let cursor=0;
-    items.forEach(it=>{
-      if(typeof it.a.start==='number'&&it.a.start>=0)it.start=it.a.start;
-      else it.start=cursor;
-      cursor=Math.max(cursor,it.start+it.dias);
-    });
-    const nRows=items.length?packRows(items):1;
-    const total=items.reduce((s,it)=>s+it.dias,0);
-    const over=total>SPR;
+    items.forEach(it=>{it.start=(typeof it.a.start==='number'&&it.a.start>=0)?it.a.start:cursor;cursor=Math.max(cursor,it.start+it.dias);});
+    // posição visível (recorta no que está oculto)
+    const drawn=[];
+    items.forEach(it=>{const cols=[];for(let g=it.start;g<it.start+it.dias;g++)if(g2v[g]!=null)cols.push(g2v[g]);if(!cols.length)return;const left=Math.min(...cols),right=Math.max(...cols);it.vleft=left;it.vwidth=right-left+1;it.clipped=cols.length<it.dias;drawn.push(it);});
+    drawn.sort((a,c)=>a.vleft-c.vleft);const ends=[];drawn.forEach(it=>{let row=ends.findIndex(e=>e<=it.vleft);if(row<0){row=ends.length;ends.push(0);}ends[row]=it.vleft+it.vwidth;it.row=row;});
+    const nRows=Math.max(1,ends.length);
+    let carga=0;items.forEach(it=>{carga+=Math.max(0,Math.min(it.start+it.dias,curEnd)-Math.max(it.start,curStart));});
+    const over=carga>SPRN;
     const trackH=Math.max(72,nRows*CG_ROWH+8);
     const drag=p==='__none'?'false':'true';
-
     h+=`<div class="cg-row">
       <div class="cg-label" draggable="${drag}" ondragstart="onLaneDrag(event,'${p}')" ondragover="onLaneOver(event)" ondragleave="onLaneLeave(event)" ondrop="onLaneDrop(event,'${p}')">
         <div class="cg-pname">${p==='__none'?'Sem responsável':esc(p)}${p!=='__none'?` <span class="cg-hide" onclick="hidePerson('${p}')" title="ocultar">⊘</span>`:''}</div>
-        <div class="cg-cap ${over?'over':''}">${total} de ${SPR} dias úteis${over?' ⚠':''}</div></div>
+        <div class="cg-cap ${over?'over':''}">${carga} de ${SPRN} dias úteis${over?' ⚠':''}</div></div>
       <div class="cg-track" data-person="${p}" ondragover="onCgOver(event)" ondragleave="onCgLeave(event)" ondrop="onCgDrop(event)" style="height:${trackH}px">
-        <div class="cg-bound" style="left:calc(var(--cw) * ${SPR})"></div>${todayLine}`;
-    if(!items.length)h+=`<span class="cg-empty-lane">— sem atividades na sprint —</span>`;
-    items.forEach(it=>{
+        ${overlay}`;
+    if(!drawn.length)h+=`<span class="cg-empty-lane">— sem atividades —</span>`;
+    drawn.forEach(it=>{
       const stage=STATUS[it.a.status]?it.a.status:'sprint';
       const pc=prioClass(it.a);
       const ring=pc?`box-shadow:0 0 0 2.5px ${PRIO[pc].col},0 1px 3px rgba(0,0,0,.18);`:'';
-      h+=`<div class="cg-block" draggable="true" ondragstart="onCgDragStart(event,'${it.a.id}','lane')"
+      h+=`<div class="cg-block${it.clipped?' clipped':''}" draggable="true" ondragstart="onCgDragStart(event,'${it.a.id}','lane')"
           title="${esc(it.l.nome)} · ${esc(it.a.nome)} — ${it.dias} dia(s)${pc?' · prioridade '+PRIO[pc].label:''}"
-          style="left:calc(var(--cw) * ${it.start} + 2px);width:calc(var(--cw) * ${it.dias} - 4px);top:${it.row*CG_ROWH+7}px;background:${STAGE_COL[stage]};${ring}">
+          style="left:calc(var(--cw) * ${it.vleft} + 2px);width:calc(var(--cw) * ${it.vwidth} - 4px);top:${it.row*CG_ROWH+7}px;background:${STAGE_COL[stage]};${ring}">
         <button class="cg-step" onclick="event.stopPropagation();bumpDias('${it.a.id}',-1)">−</button>
         <div class="bn-wrap"><div class="b-loja">${esc(it.l.nome)}</div><div class="bn">${esc(it.a.nome)}</div></div>
-        <small>${it.dias}d</small>
+        <small>${it.dias}d${it.clipped?' →':''}</small>
         <button class="cg-step" onclick="event.stopPropagation();bumpDias('${it.a.id}',1)">＋</button>
       </div>`;
     });
@@ -693,7 +777,7 @@ function renderCronograma(){
 
   // ---- caixa de candidatos ----
   h+=`<div class="cg-box" ondragover="onCgBoxOver(event)" ondragleave="onCgLeave(event)" ondrop="onCgBoxDrop(event)">
-    <h3>Pendentes · arraste p/ a sprint</h3>`;
+    <h3>Pendentes · arraste p/ a régua</h3>`;
   const sections=[['priorizar','A priorizar'],['backlog','Backlog']];
   sections.forEach(([stg,label])=>{
     const arr=[];
@@ -718,7 +802,7 @@ function onCgDragStart(e,id,from){cgDragId=id;cgDragFrom=from;e.dataTransfer.eff
 function onCgOver(e){e.preventDefault();e.currentTarget.classList.add('cg-dragover')}
 function onCgLeave(e){e.currentTarget.classList.remove('cg-dragover')}
 function onCgBoxOver(e){e.preventDefault();e.currentTarget.classList.add('cg-dragover')}
-function dayFromEvent(e,track){const r=track.getBoundingClientRect();return Math.max(0,Math.floor((e.clientX-r.left)/CG_CW));}
+function dayFromEvent(e,track){const r=track.getBoundingClientRect();const v=Math.max(0,Math.floor((e.clientX-r.left)/CG_CW));return cgVis[v]!=null?cgVis[v]:(cgVis.length?cgVis[cgVis.length-1]+(v-(cgVis.length-1)):v);}
 function onCgDrop(e){
   e.preventDefault();const track=e.currentTarget;track.classList.remove('cg-dragover');
   const id=cgDragId,from=cgDragFrom;cgDragId=null;cgDragFrom=null;if(!id)return;
