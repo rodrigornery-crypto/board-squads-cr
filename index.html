@@ -288,6 +288,18 @@
   .cg-daycell.spr-p1{background:#eef1f7}
   .cg-daycell.spr-start{border-left:2px solid #b9b9b3}
   .cg-block.clipped{border-top-right-radius:2px;border-bottom-right-radius:2px}
+  .cg-sname-txt{flex:1;min-width:0;font-weight:600;font-size:13px;color:var(--txt);cursor:pointer;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .cg-sname-txt:hover{text-decoration:underline}
+  .cg-sedit{cursor:pointer;color:var(--mut2);font-size:12px}
+  .cg-sedit:hover{color:var(--blu)}
+  .cg-spedit{display:flex;align-items:center;gap:8px;flex-wrap:wrap;background:#eef3ff;border:1px solid #c9d8f5;border-radius:10px;padding:10px 12px;margin-bottom:12px;font-size:13px}
+  .cg-spedit .cg-spdel{margin-left:auto;color:var(--red)}
+  .cg-spedit .cg-spdel:hover{border-color:var(--red)}
+  /* feriados */
+  .cg-daycell.cg-holiday{background:#e6e6e2}
+  .cg-daycell.cg-holiday .cg-dow,.cg-daycell.cg-holiday .cg-date{color:#9a9aa0}
+  .cg-holtag{font-size:8px;line-height:1.05;color:#9a9aa0;margin-top:2px;text-transform:uppercase;letter-spacing:.02em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .cg-holcol{position:absolute;top:0;bottom:0;width:var(--cw);background:rgba(140,140,140,.14);z-index:0;pointer-events:none}
 </style>
 </head>
 <body>
@@ -371,7 +383,7 @@ function normalizeBoards(boards){
 const MES=['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
 const TITLE={sarue:'Sarue · Board da Sprint',guardiao:'Guardião · Board da Sprint'};
 
-let state={boards:{},current:'sarue',view:'lista',filterPerson:'',hideDone:false,editingId:null,expanded:{},kAdding:null};
+let state={boards:{},current:'sarue',view:'lista',filterPerson:'',hideDone:false,editingId:null,expanded:{},kAdding:null,sprintEdit:null};
 const board=()=>state.boards[state.current];
 
 function uid(){return Math.random().toString(36).slice(2,8)}
@@ -432,8 +444,8 @@ function LJ(id){return board().lojas.find(l=>l.id===id)}
 function ACT(actId){for(const l of board().lojas){const a=l.atividades.find(x=>x.id===actId);if(a)return a}return null}
 
 /* ---------- board / filters ---------- */
-function switchBoard(b){state.current=b;state.filterPerson='';state.editingId=null;state.kAdding=null;render()}
-function switchView(v){state.view=v;state.editingId=null;state.kAdding=null;render()}
+function switchBoard(b){state.current=b;state.filterPerson='';state.editingId=null;state.kAdding=null;state.sprintEdit=null;render()}
+function switchView(v){state.view=v;state.editingId=null;state.kAdding=null;state.sprintEdit=null;render()}
 function setFilter(){state.filterPerson=document.getElementById('fPerson').value;state.hideDone=document.getElementById('fHide').checked;render()}
 
 /* ---------- mutations: loja ---------- */
@@ -628,13 +640,38 @@ function setSprintStart(v){board().sprintStart=v;save();render();}
 function setSprintName(id,v){const s=board().sprints.find(x=>x.id===id);if(s){s.nome=v;save();}}
 function bumpSprintDias(id,d){const s=board().sprints.find(x=>x.id===id);if(s){s.dias=Math.max(1,(s.dias||1)+d);save();render();}}
 function addSprintAfter(){const b=board();b.sprints.push({id:uid(),nome:'Sprint '+(b.sprints.length+1),dias:b.sprints.length?b.sprints[b.sprints.length-1].dias:10});save();render();}
-function delSprint(id){const b=board();if(b.sprints.length<=1){alert('Mantenha ao menos uma sprint.');return;}if(confirm('Apagar este marcador de sprint? As atividades continuam, só some a faixa.')){b.sprints=b.sprints.filter(s=>s.id!==id);b.hiddenSprints=(b.hiddenSprints||[]).filter(x=>x!==id);save();render();}}
+function delSprint(id){const b=board();if(b.sprints.length<=1){alert('Mantenha ao menos uma sprint.');return;}if(confirm('Apagar este marcador de sprint? As atividades continuam, só some a faixa.')){b.sprints=b.sprints.filter(s=>s.id!==id);b.hiddenSprints=(b.hiddenSprints||[]).filter(x=>x!==id);state.sprintEdit=null;save();render();}}
 function hideSprint(id){const b=board();b.hiddenSprints=b.hiddenSprints||[];if(!b.hiddenSprints.includes(id))b.hiddenSprints.push(id);save();render();}
 function unhideSprint(id){const b=board();b.hiddenSprints=(b.hiddenSprints||[]).filter(x=>x!==id);save();render();}
 let sprResize=null;
 function startSprintResize(e,id){e.preventDefault();e.stopPropagation();const s=board().sprints.find(x=>x.id===id);if(!s)return;sprResize={id,startX:e.clientX,startDias:s.dias};window.addEventListener('pointermove',onSprResizeMove);window.addEventListener('pointerup',endSprResize);}
 function onSprResizeMove(e){if(!sprResize)return;const nd=Math.max(1,sprResize.startDias+Math.round((e.clientX-sprResize.startX)/CG_CW));const s=board().sprints.find(x=>x.id===sprResize.id);if(s&&s.dias!==nd){s.dias=nd;save();render();}}
 function endSprResize(){sprResize=null;window.removeEventListener('pointermove',onSprResizeMove);window.removeEventListener('pointerup',endSprResize);}
+/* editor de sprint (nome + dias úteis exatos; cria nova já configurada) */
+function openSprintEdit(id){state.sprintEdit=id;render();const f=document.getElementById('spName');if(f){f.focus();f.select&&f.select();}}
+function closeSprintEdit(){state.sprintEdit=null;render();}
+function saveSprintEdit(){
+  const b=board();
+  const name=(document.getElementById('spName').value||'').trim();
+  const dias=Math.max(1,Math.min(60,+document.getElementById('spDias').value||1));
+  if(state.sprintEdit==='__new')b.sprints.push({id:uid(),nome:name||('Sprint '+(b.sprints.length+1)),dias});
+  else{const s=b.sprints.find(x=>x.id===state.sprintEdit);if(s){if(name)s.nome=name;s.dias=dias;}}
+  state.sprintEdit=null;save();render();
+}
+/* feriados nacionais do Brasil (fixos + móveis baseados na Páscoa) */
+function easterDate(y){const a=y%19,b=Math.floor(y/100),c=y%100,d=Math.floor(b/4),e=b%4,f=Math.floor((b+8)/25),g=Math.floor((b-f+1)/3),h=(19*a+b-d-g+15)%30,i=Math.floor(c/4),k=c%4,l=(32+2*e+2*i-h-k)%7,m=Math.floor((a+11*h+22*l)/451),mo=Math.floor((h+l-7*m+114)/31),da=((h+l-7*m+114)%31)+1;return new Date(y,mo-1,da);}
+let _holCache={};
+function holidaysFor(year){
+  const map={};const p=n=>String(n).padStart(2,'0');
+  const fix=(mo,da,name)=>{map[year+'-'+p(mo)+'-'+p(da)]=name;};
+  fix(1,1,'Confraternização Universal');fix(4,21,'Tiradentes');fix(5,1,'Dia do Trabalho');
+  fix(9,7,'Independência');fix(10,12,'N. Sra. Aparecida');fix(11,2,'Finados');
+  fix(11,15,'Proclamação da República');fix(11,20,'Consciência Negra');fix(12,25,'Natal');
+  const E=easterDate(year),mov=(off,name)=>{const d=new Date(E);d.setDate(d.getDate()+off);map[iso(d)]=name;};
+  mov(-48,'Carnaval');mov(-47,'Carnaval');mov(-2,'Sexta-feira Santa');mov(60,'Corpus Christi');
+  return map;
+}
+function holidayName(d){const y=d.getFullYear();if(!_holCache[y])_holCache[y]=holidaysFor(y);return _holCache[y][iso(d)]||null;}
 function bumpDias(id,delta){const a=ACT(id);if(a){a.dias=Math.max(0,(a.dias||0)+delta);save();render();}}
 function workdays(startISO,n){
   const out=[];let d=new Date(startISO+'T00:00');if(isNaN(d))d=new Date();
@@ -683,16 +720,29 @@ function renderCronograma(){
   // overlay (hoje + divisórias de sprint) injetado em cada faixa
   let overlay=todayV>=0?`<div class="cg-today" style="left:calc(var(--cw) * ${todayV} + var(--cw)/2)"></div>`:'';
   ranges.forEach((r,idx)=>{if(idx===0||hiddenSet.has(r.s.id))return;const gv=g2v[r.startDay];if(gv!=null)overlay+=`<div class="cg-sbound" style="left:calc(var(--cw) * ${gv})"></div>`;});
+  vis.forEach((g,v)=>{if(holidayName(allDays[g]))overlay+=`<div class="cg-holcol" style="left:calc(var(--cw) * ${v})"></div>`;});
 
   let h=`<div class="cg-cfg">
     <span>Início (Sprint 1)</span>
     <input type="date" class="ctrl" value="${b.sprintStart}" onchange="setSprintStart(this.value)">
-    <button class="btn" onclick="addSprintAfter()">+ nova sprint</button>
+    <button class="btn" onclick="openSprintEdit('__new')">+ nova sprint</button>
     ${(b.hiddenSprints||[]).length?`<span class="cg-hidden-lbl">sprints ocultas:</span>`+(b.hiddenSprints||[]).map(id=>{const s=b.sprints.find(x=>x.id===id);return s?`<span class="cg-hidden-chip" onclick="unhideSprint('${id}')" title="reexibir">${esc(s.nome)} ↩</span>`:'';}).join(''):''}
     <span class="cg-hidezone" ondragover="onHideOver(event)" ondragleave="onCgLeave(event)" ondrop="onHideDrop(event)">⊘ soltar pessoa p/ ocultar</span>
     ${hidden.map(n=>`<span class="cg-hidden-chip" onclick="unhidePerson('${n}')" title="reexibir">${esc(n)} ×</span>`).join('')}
   </div>
-  <div class="cg-legend">Régua contínua de semanas · arraste blocos p/ mover, ＋/− muda duração · na faixa do topo edite o nome, ± dias, arraste a borda ⟺, 👁 oculta a sprint · <span style="color:var(--blu)">┊ hoje</span> · carga calculada na <b>${esc(cur?cur.s.nome:'sprint')}</b>.</div>`;
+  <div class="cg-legend">Régua contínua de semanas · arraste blocos p/ mover, ＋/− muda duração · clique na faixa (ou ✎) p/ editar a sprint, arraste a borda ⟺, 👁 oculta · <span style="color:var(--blu)">┊ hoje</span> · <span style="color:#8a8a90">▒ feriado</span> · carga na <b>${esc(cur?cur.s.nome:'sprint')}</b>.</div>`;
+
+  if(state.sprintEdit){
+    const ed=state.sprintEdit==='__new'?null:b.sprints.find(s=>s.id===state.sprintEdit);
+    h+=`<div class="cg-spedit">
+      <b>${ed?'Editar sprint':'Nova sprint'}</b>
+      <input id="spName" class="ctrl" placeholder="nome da sprint" value="${ed?esc(ed.nome):''}" style="width:170px">
+      <input id="spDias" type="number" min="1" max="60" class="ctrl" value="${ed?ed.dias:10}" style="width:72px"><span>dias úteis</span>
+      <button class="btn primary" onclick="saveSprintEdit()">${ed?'salvar':'criar'}</button>
+      <button class="btn" onclick="closeSprintEdit()">cancelar</button>
+      ${ed?`<button class="btn cg-spdel" onclick="delSprint('${ed.id}')">apagar</button>`:''}
+    </div>`;
+  }
 
   h+=`<div class="cg-layout"><div class="cg-scroll"><div class="cg" style="--cw:${CG_CW}px;--lw:184px">`;
 
@@ -706,13 +756,11 @@ function renderCronograma(){
     const isCur=cur&&cur.s.id===r.s.id;
     h+=`<div class="cg-sband${isCur?' cur':''}" style="left:calc(var(--cw) * ${v0});width:calc(var(--cw) * ${v1-v0+1})">
       <div class="cg-sband-top">
-        <input class="cg-sname" value="${esc(r.s.nome)}" onchange="setSprintName('${r.s.id}',this.value)">
+        <span class="cg-sname-txt" onclick="openSprintEdit('${r.s.id}')" title="editar sprint">${esc(r.s.nome)}</span>
         <span class="cg-sb-actions">
-          <button class="cg-step sm" onclick="bumpSprintDias('${r.s.id}',-1)" title="−1 dia útil">−</button>
           <span class="cg-sdays">${r.s.dias}d</span>
-          <button class="cg-step sm" onclick="bumpSprintDias('${r.s.id}',1)" title="+1 dia útil">＋</button>
+          <span class="cg-sedit" onclick="openSprintEdit('${r.s.id}')" title="editar sprint">✎</span>
           <span class="cg-seye" onclick="hideSprint('${r.s.id}')" title="ocultar sprint">👁</span>
-          <span class="cg-sdel" onclick="delSprint('${r.s.id}')" title="apagar marcador">×</span>
         </span>
       </div>
       <div class="cg-sper">${per}</div>
@@ -723,8 +771,8 @@ function renderCronograma(){
 
   // header de dias
   h+=`<div class="cg-row head"><div class="cg-label">Pessoa · carga</div><div class="cg-track">`;
-  vis.forEach(g=>{const d=allDays[g];const r=dayRange(g);const parity=r?(ranges.indexOf(r)%2):2;const isStart=r&&g===r.startDay;const td=iso(d)===todayISO();
-    h+=`<div class="cg-daycell spr-p${parity}${isStart?' spr-start':''}${td?' cg-istoday':''}"><div class="cg-dow">${DOW[d.getDay()]}</div><div class="cg-date">${String(d.getDate()).padStart(2,'0')}/${MES[d.getMonth()]}</div></div>`;});
+  vis.forEach(g=>{const d=allDays[g];const r=dayRange(g);const parity=r?(ranges.indexOf(r)%2):2;const isStart=r&&g===r.startDay;const td=iso(d)===todayISO();const hol=holidayName(d);
+    h+=`<div class="cg-daycell spr-p${parity}${isStart?' spr-start':''}${hol?' cg-holiday':''}${td?' cg-istoday':''}"${hol?` title="Feriado: ${esc(hol)}"`:''}><div class="cg-dow">${DOW[d.getDay()]}</div><div class="cg-date">${String(d.getDate()).padStart(2,'0')}/${MES[d.getMonth()]}</div>${hol?`<div class="cg-holtag">${esc(hol)}</div>`:''}</div>`;});
   h+=`</div></div>`;
 
   // lanes
